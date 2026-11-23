@@ -27,6 +27,10 @@ The notch on your MacBook is a hole in the screen. Perch turns it into a living 
 
 **Lives in the notch.** When nothing is happening, Perch is invisible. When something is, it slides out of the notch on both sides, and slides back under it when it is over. Rest the pointer on it or click it to open the full view.
 
+<p align="center">
+  <img src="docs/images/moments.png" alt="Four moments out of the notch: music with artwork and equalizer, AirPods at 79 percent, the volume bar, and a timer counting down" width="560">
+</p>
+
 **Music from any app.** Spotify, Apple Music, a YouTube tab: whatever reports to Now Playing shows up with its artwork and an equalizer tinted in the artwork's colour. Open the notch for title, a seekable progress bar and controls. Click the artwork to jump to the app.
 
 <p align="center">
@@ -37,11 +41,19 @@ The notch on your MacBook is a hole in the screen. Perch turns it into a living 
 
 **Your AirPods, like on iPhone.** Take them out of the case and they slide out of the notch with their battery. The Battery tab shows your Mac and each bud and the case, with which one is charging.
 
+<p align="center">
+  <img src="docs/images/battery.png" alt="The Battery tab: the Mac fully charged beside AirPods Pro with rings for the left bud, right bud and case" width="720">
+</p>
+
 **Volume and brightness, out of the notch.** Press the keys and a slim slider slides out of the notch instead of the grey box in the middle of your screen. Hover over it to drag. It even shows over a full-screen video.
 
 **A timer that rings.** Pick a preset or dial in minutes; the countdown sits in the notch, and when it ends you hear the familiar timer sound until you stop it.
 
 **A shelf for files.** Drag files onto the notch to park them there, then drag them out where you need them or send them all with AirDrop.
+
+<p align="center">
+  <img src="docs/images/shelf.png" alt="The Shelf tab with five files parked in the notch, and AirDrop and Clear buttons" width="720">
+</p>
 
 **Keep awake.** One click on the cup keeps your Mac awake, until you turn it off or for 30 minutes to 2 hours.
 
@@ -50,7 +62,7 @@ The notch on your MacBook is a hole in the screen. Perch turns it into a living 
 **Yours to tune.** Hover or click to open, how long to wait, how strong the haptics are, which screens get a notch, which modules run, and whether music or your battery stays beside the notch when nothing is happening.
 
 <p align="center">
-  <img src="docs/images/settings.png" alt="Perch settings: modules with their own options, under a live copy of the notch" width="480">
+  <img src="docs/images/settings.png" alt="Perch settings: music, timer, shelf, AirPods and battery modules, each with a switch, under a live copy of the notch" width="480">
 </p>
 
 ## Built to stay out of the way
