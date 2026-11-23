@@ -65,16 +65,18 @@ jobs:
         run: |
           set -o pipefail
           xcodegen generate
+          mkdir -p build
           xcodebuild build \
             -scheme Perch \
             -configuration Release \
-            -destination 'platform=macOS' \
+            -destination 'platform=macOS,arch=arm64' \
             -derivedDataPath build/DerivedData \
             CODE_SIGN_IDENTITY="Perch Code Signing" \
             OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN --timestamp=none" \
             MARKETING_VERSION="${{ steps.version.outputs.version }}" \
             CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
-            | grep -E '(error:|warning:|\*\*)' || true
+            > build/release.log 2>&1 || { grep -E 'error:|\*\* BUILD' build/release.log; exit 1; }
+          grep -E 'warning:|\*\* BUILD' build/release.log || true
           test -d build/DerivedData/Build/Products/Release/Perch.app
 
       - name: Verify signature
