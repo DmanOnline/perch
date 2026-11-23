@@ -35,6 +35,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.itcompleet.perch
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         PRODUCT_NAME: Perch
         INFOPLIST_FILE: Perch/Info.plist
         GENERATE_INFOPLIST_FILE: NO
