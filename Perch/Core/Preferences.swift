@@ -21,6 +21,7 @@ final class Preferences {
         static let hapticStrength = "hapticStrength"
         static let displayMode = "displayMode"
         static let hideInFullScreen = "hideInFullScreen"
+        static let gestures = "gestures"
         static let restingModule = "restingModule"
         static let disabledModules = "disabledModules"
         static let musicLinger = "music.linger"
@@ -44,6 +45,8 @@ final class Preferences {
     var displayMode: DisplayMode { didSet { defaults.set(displayMode.rawValue, forKey: Key.displayMode) } }
     /// Step aside while a video plays in full screen.
     var hideInFullScreen: Bool { didSet { defaults.set(hideInFullScreen, forKey: Key.hideInFullScreen) } }
+    /// Two-finger swipes on the trackpad over the notch.
+    var gestures: Bool { didSet { defaults.set(gestures, forKey: Key.gestures) } }
     /// Module kept visible next to the notch when nothing is happening; empty for none.
     var restingModule: String { didSet { defaults.set(restingModule, forKey: Key.restingModule) } }
     private(set) var disabledModules: Set<String> {
@@ -66,6 +69,7 @@ final class Preferences {
         }
         displayMode = defaults.string(forKey: Key.displayMode).flatMap(DisplayMode.init(rawValue:)) ?? .notchedScreens
         hideInFullScreen = defaults.object(forKey: Key.hideInFullScreen) as? Bool ?? true
+        gestures = defaults.object(forKey: Key.gestures) as? Bool ?? true
         restingModule = defaults.string(forKey: Key.restingModule) ?? ""
         disabledModules = Set(defaults.stringArray(forKey: Key.disabledModules) ?? [])
         musicLinger = defaults.object(forKey: Key.musicLinger) as? Double ?? Default.musicLinger

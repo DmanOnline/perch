@@ -147,11 +147,34 @@ final class NotchController {
         }) {
             mouseMonitors.append(global)
         }
+        // Scrolls over the closed notch go to whatever is below it, so watch them
+        // globally too; over the open notch they arrive as Perch's own events.
+        if let global = NSEvent.addGlobalMonitorForEvents(matching: .scrollWheel, handler: { [weak self] event in
+            let input = ScrollInput(event)
+            MainActor.assumeIsolated { self?.scrolled(input) }
+        }) {
+            mouseMonitors.append(global)
+        }
+        if let local = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel, handler: { [weak self] event in
+            let input = ScrollInput(event)
+            MainActor.assumeIsolated { self?.scrolled(input) }
+            return event
+        }) {
+            mouseMonitors.append(local)
+        }
         if let local = NSEvent.addLocalMonitorForEvents(matching: mask, handler: { [weak self] event in
             MainActor.assumeIsolated { self?.pointerMoved() }
             return event
         }) {
             mouseMonitors.append(local)
+        }
+    }
+
+    /// Two-finger movement goes to the notch under the pointer.
+    private func scrolled(_ input: ScrollInput) {
+        let location = NSEvent.mouseLocation
+        for window in windows.values {
+            window.scrolled(input, at: location)
         }
     }
 

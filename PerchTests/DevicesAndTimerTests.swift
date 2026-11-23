@@ -157,3 +157,31 @@ struct MediaKeyTests {
         #expect(MediaKey.decode(subtype: 7, data1: (0 << 16) | 0x0A00) == nil)
     }
 }
+
+struct SwipeTrackerTests {
+    @Test func clearDownwardMovementIsOneSwipeDown() {
+        var tracker = SwipeTracker()
+        #expect(tracker.add(dx: 0, dy: 20) == nil)
+        #expect(tracker.add(dx: 2, dy: 20) == .down)
+        // The rest of the same movement does not fire again.
+        #expect(tracker.add(dx: 0, dy: 60) == nil)
+        tracker.reset()
+        #expect(tracker.add(dx: 0, dy: -50) == .up)
+    }
+
+    @Test func sidewaysNeedsToDominate() {
+        var tracker = SwipeTracker()
+        // Diagonal: neither axis clearly wins, so nothing happens yet.
+        #expect(tracker.add(dx: 40, dy: 35) == nil)
+        tracker.reset()
+        #expect(tracker.add(dx: -45, dy: 5) == .left)
+        tracker.reset()
+        #expect(tracker.add(dx: 45, dy: -5) == .right)
+    }
+
+    @Test func smallTwitchesAreIgnored() {
+        var tracker = SwipeTracker()
+        #expect(tracker.add(dx: 5, dy: 10) == nil)
+        #expect(tracker.add(dx: -3, dy: 8) == nil)
+    }
+}

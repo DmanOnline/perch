@@ -160,6 +160,9 @@ private struct GeneralPane: View {
                 }
                 .disabled(!preferences.openOnHover)
             }
+            SettingRow("Trackpad gestures", hint: "Two fingers over the notch: down opens, up closes; sideways changes track while music plays, tab otherwise.") {
+                Toggle("", isOn: $preferences.gestures)
+            }
             SettingRow("Trackpad feel", hint: hapticHint, last: true) {
                 ChipPicker(selection: $preferences.hapticStrength, options: [
                     (.off, "Off"),

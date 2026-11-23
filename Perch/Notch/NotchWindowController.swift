@@ -8,6 +8,7 @@ final class NotchWindowController {
     private let preferences = Preferences.shared
     private var openTask: Task<Void, Never>?
     private var closeTask: Task<Void, Never>?
+    private var swipe = SwipeTracker()
     /// Stepped aside for a full-screen app on this screen.
     private(set) var isHidden = false
 
@@ -93,6 +94,71 @@ final class NotchWindowController {
             context.duration = hidden ? 0.2 : 0.35
             panel.animator().alphaValue = hidden ? 0 : 1
         }
+    }
+
+    // MARK: Gestures
+
+    /// Two fingers on the trackpad over the notch: down opens, up closes,
+    /// sideways changes track on the music (open or in the wings) and tab
+    /// everywhere else, and up and down on the volume pop-up changes the volume.
+    func scrolled(_ input: ScrollInput, at location: NSPoint) {
+        guard preferences.gestures, !isHidden, input.isPrecise, !input.isMomentum,
+              model.hoverRect.contains(location) else { return }
+        if input.began { swipe.reset() }
+        defer { if input.ended { swipe.reset() } }
+
+        if model.state == .compact, model.host.current?.moduleID == "hud",
+           let hud = model.host.module(id: "hud") as? HUDModule, hud.kind == .volume {
+            // Live: fingers up is louder, like pushing a fader.
+            hud.setVolume(hud.volume - Float(input.dy) * 0.004)
+            return
+        }
+        guard let direction = swipe.add(dx: input.dx, dy: input.dy) else { return }
+        perform(direction)
+    }
+
+    private func perform(_ direction: Swipe) {
+        switch (model.state, direction) {
+        case (.closed, .down), (.compact, .down):
+            open()
+        case (.expanded, .up):
+            collapse()
+        case (.expanded, .left), (.expanded, .right):
+            // While music plays on the music tab the swipe changes track;
+            // otherwise it changes tab.
+            if model.expandedModule?.id == "music", isMusicPlaying {
+                skipTrack(direction)
+            } else {
+                switchTab(by: direction == .left ? 1 : -1)
+            }
+        case (.compact, .left), (.compact, .right):
+            guard model.host.current?.moduleID == "music", isMusicPlaying else { return }
+            skipTrack(direction)
+        default:
+            break
+        }
+    }
+
+    private var isMusicPlaying: Bool {
+        (model.host.module(id: "music") as? MusicModule)?.nowPlaying?.isPlaying == true
+    }
+
+    /// Fingers to the left: next track, like flicking to the next song.
+    private func skipTrack(_ direction: Swipe) {
+        guard let music = model.host.module(id: "music") as? MusicModule, music.nowPlaying != nil else { return }
+        Haptics.play(.tap)
+        music.service.send(direction == .left ? .nextTrack : .previousTrack)
+    }
+
+    /// Like pages on iPhone: fingers to the left bring the next tab.
+    private func switchTab(by step: Int) {
+        let tabs = model.tabs
+        guard tabs.count > 1, let current = model.expandedModule,
+              let index = tabs.firstIndex(where: { $0.id == current.id }) else { return }
+        let next = index + step
+        guard tabs.indices.contains(next) else { return }
+        Haptics.play(.tap)
+        model.selectedModuleID = tabs[next].id
     }
 
     private static var isDraggingFiles: Bool {
