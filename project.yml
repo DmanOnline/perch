@@ -13,9 +13,6 @@ settings:
     SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
     SWIFT_APPROACHABLE_CONCURRENCY: YES
     MACOSX_DEPLOYMENT_TARGET: "15.0"
-    # Apple silicon only: every Mac with a notch has it, and Xcode 26's
-    # compiler crashes on the Intel slice.
-    ARCHS: arm64
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
     CODE_SIGN_STYLE: Manual

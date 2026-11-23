@@ -69,7 +69,7 @@ jobs:
           xcodebuild build \
             -scheme Perch \
             -configuration Release \
-            -destination 'platform=macOS,arch=arm64' \
+            -destination 'generic/platform=macOS' \
             -derivedDataPath build/DerivedData \
             CODE_SIGN_IDENTITY="Perch Code Signing" \
             OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN --timestamp=none" \

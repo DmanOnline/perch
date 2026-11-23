@@ -111,6 +111,8 @@ final class NotchWindowController {
 
 /// Takes the first click even while the panel is not key, so a button in the
 /// notch never needs a second click.
-private final class NotchHostingView<Content: View>: NSHostingView<Content> {
+/// Not generic on purpose: a generic subclass of NSHostingView crashes the
+/// Swift 6.3 optimizer (Xcode 26.6) in Release builds.
+private final class NotchHostingView: NSHostingView<NotchView> {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }

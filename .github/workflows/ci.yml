@@ -35,7 +35,7 @@ jobs:
           mkdir -p build
           xcodebuild test \
             -scheme Perch \
-            -destination 'platform=macOS,arch=arm64' \
+            -destination 'generic/platform=macOS' \
             -derivedDataPath build/DerivedData \
             > build/test.log 2>&1 || { grep -E '✘|error:|\*\* TEST' build/test.log; exit 1; }
           grep -E '^(✔|✘)|\*\* TEST' build/test.log
@@ -47,7 +47,7 @@ jobs:
           xcodebuild build \
             -scheme Perch \
             -configuration Release \
-            -destination 'platform=macOS,arch=arm64' \
+            -destination 'generic/platform=macOS' \
             -derivedDataPath build/DerivedData \
             > build/release.log 2>&1 || {
               grep -nE 'error:|Stack dump|Please submit|While (evaluating|emitting|silgen|type-checking)|\*\* BUILD' build/release.log | head -40
