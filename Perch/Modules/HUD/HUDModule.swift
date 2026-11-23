@@ -39,6 +39,12 @@ final class HUDModule: PerchModule {
     @ObservationIgnored private var lastOwnChange = Date.distantPast
 
     func start() {
+        // Read the real levels now, and ignore the burst of change
+        // notifications CoreAudio sends while the listeners attach.
+        volume = SystemVolume.volume ?? volume
+        isMuted = SystemVolume.isMuted
+        brightness = SystemBrightness.brightness ?? brightness
+        lastOwnChange = .now + 1
         watcher.start { [weak self] in self?.volumeChangedOutside() }
         startCatchingKeys()
     }

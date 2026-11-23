@@ -100,7 +100,7 @@ private struct SettingsHeader: View {
     }
 }
 
-private struct NotchPreview: View {
+struct NotchPreview: View {
     let host: ModuleHost?
 
     private let notch = CGSize(width: 186, height: 32)
@@ -310,10 +310,15 @@ private struct AboutPane: View {
                 Text("The open notch for your Mac.")
                     .font(.system(size: 13))
                     .foregroundStyle(SettingsStyle.secondary)
-                Text(version)
-                    .font(.system(size: 11, weight: .medium).monospacedDigit())
-                    .foregroundStyle(SettingsStyle.secondary)
-                    .padding(.top, 6)
+                HStack(spacing: 12) {
+                    Text(version)
+                        .font(.system(size: 11, weight: .medium).monospacedDigit())
+                        .foregroundStyle(SettingsStyle.secondary)
+                    Button("Show welcome") { WelcomeWindowController.shared.show() }
+                        .buttonStyle(.link)
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .padding(.top, 6)
             }
             .padding(.top, 14)
             .padding(.bottom, 6)
