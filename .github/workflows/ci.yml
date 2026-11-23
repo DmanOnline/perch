@@ -49,7 +49,11 @@ jobs:
             -configuration Release \
             -destination 'platform=macOS,arch=arm64' \
             -derivedDataPath build/DerivedData \
-            > build/release.log 2>&1 || { grep -E 'error:|\*\* BUILD' build/release.log; exit 1; }
+            > build/release.log 2>&1 || {
+              grep -nE 'error:|Stack dump|Please submit|While (evaluating|emitting|silgen|type-checking)|\*\* BUILD' build/release.log | head -40
+              grep -B3 -A25 'Stack dump' build/release.log | head -80
+              exit 1
+            }
           grep -E 'warning:|\*\* BUILD' build/release.log || true
           test -d build/DerivedData/Build/Products/Release/Perch.app
 
