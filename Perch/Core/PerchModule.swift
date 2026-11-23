@@ -40,6 +40,8 @@ protocol PerchModule: AnyObject {
     var id: String { get }
     var title: String { get }
     var symbol: String { get }
+    /// One line for the settings: what this module shows.
+    var summary: String { get }
     var activity: Activity? { get }
 
     func start()
@@ -48,4 +50,14 @@ protocol PerchModule: AnyObject {
     func compactLeading() -> AnyView
     func compactTrailing() -> AnyView
     func expanded() -> AnyView
+    /// Options shown under the module in the settings, if any.
+    func settings() -> AnyView?
+    /// Drawn across the whole compact notch, above the wings and clipped to the
+    /// notch shape, for effects that span both sides.
+    func compactOverlay() -> AnyView?
+}
+
+extension PerchModule {
+    func settings() -> AnyView? { nil }
+    func compactOverlay() -> AnyView? { nil }
 }

@@ -4,14 +4,13 @@ import Observation
 import SwiftUI
 
 /// What is playing, with artwork and controls. Holds the notch while music
-/// plays and lingers briefly after a pause, so a quick pause does not flicker.
+/// plays and lingers after a pause (a setting), so a quick pause does not flicker.
 @Observable
 final class MusicModule: PerchModule {
-    static let pauseLinger: Duration = .seconds(6)
-
     let id = "music"
     let title = "Music"
     let symbol = "music.note"
+    let summary = "What is playing in any app, with artwork and controls."
 
     let service = NowPlayingService()
     private(set) var activity: Activity?
@@ -54,8 +53,9 @@ final class MusicModule: PerchModule {
                 activity = Activity(id: "playing", moduleID: id, priority: .info)
             }
         } else if activity != nil, lingerTask == nil {
+            let linger = Duration.milliseconds(Int(Preferences.shared.musicLinger * 1000))
             lingerTask = Task { [weak self] in
-                try? await Task.sleep(for: Self.pauseLinger)
+                try? await Task.sleep(for: linger)
                 guard !Task.isCancelled else { return }
                 self?.activity = nil
                 self?.lingerTask = nil
@@ -81,6 +81,10 @@ final class MusicModule: PerchModule {
 
     func expanded() -> AnyView {
         AnyView(MusicExpandedView(module: self))
+    }
+
+    func settings() -> AnyView? {
+        AnyView(MusicSettingsView())
     }
 
     // MARK: - Colour

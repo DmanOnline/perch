@@ -17,9 +17,6 @@ nonisolated enum NotchMetrics {
     /// How far the closed notch grows while the pointer rests on it.
     static let peekGrowth = CGSize(width: 10, height: 3)
 
-    /// Pointer must rest this long before hovering opens the notch,
-    /// so a trip to the menu bar does not open it by accident.
-    static let hoverDwell: Duration = .milliseconds(300)
     static let hoverExit: Duration = .milliseconds(160)
 
     /// Opening overshoots a touch; closing settles without bounce.

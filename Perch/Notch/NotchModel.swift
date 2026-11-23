@@ -32,7 +32,7 @@ final class NotchModel {
     var expandedModule: (any PerchModule)? {
         if let selectedModuleID, let module = host.module(id: selectedModuleID) { return module }
         if let current = host.current, let module = host.module(id: current.moduleID) { return module }
-        return host.modules.first
+        return host.enabledModules.first
     }
 
     /// Area of the screen where the pointer keeps (or makes) the notch open.

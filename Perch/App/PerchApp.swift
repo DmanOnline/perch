@@ -5,10 +5,9 @@ struct PerchApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        Settings {
-            Text("Settings arrive in 0.1.")
-                .padding(40)
-        }
+        // Perch has no menu bar; its settings live in their own window,
+        // opened from the notch or by opening the app again.
+        Settings { EmptyView() }
     }
 }
 
@@ -26,7 +25,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         notch.start()
         self.host = host
         self.notch = notch
+        SettingsWindowController.shared.host = host
         quitCleanlyOnSIGTERM()
+    }
+
+    /// Opening Perch while it already runs (Finder, Spotlight) shows the settings.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        SettingsWindowController.shared.show()
+        return false
     }
 
     /// `kill`, logout and launchd send SIGTERM, which skips

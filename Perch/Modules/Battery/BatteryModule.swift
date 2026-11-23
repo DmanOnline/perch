@@ -13,11 +13,12 @@ nonisolated struct BatteryReading: Equatable, Sendable {
 /// and while the battery is low.
 @Observable
 final class BatteryModule: PerchModule {
-    static let lowThreshold = 10
-    static let pluggedInDisplay: Duration = .seconds(4)
+    static var lowThreshold: Int { Preferences.shared.batteryLowThreshold }
+    static let pluggedInDisplay: Duration = .seconds(5)
 
     let id = "battery"
     let title = "Battery"
+    let summary = "Lights up when power connects and when the battery runs low."
     var symbol: String { reading.map(Self.symbol(for:)) ?? "battery.100" }
 
     private(set) var reading: BatteryReading?
@@ -25,9 +26,19 @@ final class BatteryModule: PerchModule {
 
     @ObservationIgnored private var runLoopSource: CFRunLoopSource?
     @ObservationIgnored private var clearTask: Task<Void, Never>?
+    @ObservationIgnored private var debugObserver: NSObjectProtocol?
 
     func start() {
         refresh()
+        #if DEBUG
+        // Replays the plug-in moment without a cable, for tuning and demos:
+        // post the distributed notification "app.perch.debug.plugIn".
+        debugObserver = DistributedNotificationCenter.default().addObserver(
+            forName: Notification.Name("app.perch.debug.plugIn"), object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.celebratePlugIn() }
+        }
+        #endif
         let context = Unmanaged.passUnretained(self).toOpaque()
         guard let source = IOPSNotificationCreateRunLoopSource(powerSourcesChanged, context)?.takeRetainedValue() else { return }
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
@@ -49,13 +60,8 @@ final class BatteryModule: PerchModule {
             activity = nil
             return
         }
-        if reading.isPluggedIn, previous?.isPluggedIn == false {
-            show(Activity(
-                id: "plugged-in",
-                moduleID: id,
-                priority: .attention,
-                expiresAt: .now + 4
-            ), for: Self.pluggedInDisplay)
+        if reading.isPluggedIn, previous?.isPluggedIn == false, Preferences.shared.batteryShowOnPlugIn {
+            celebratePlugIn()
         } else if !reading.isPluggedIn, reading.percent <= Self.lowThreshold {
             clearTask?.cancel()
             if activity?.id != "low" {
@@ -65,6 +71,19 @@ final class BatteryModule: PerchModule {
             activity = nil
         }
     }
+
+    /// Power connected: the notch lights up with the charging animation.
+    func celebratePlugIn() {
+        Haptics.play(.event)
+        show(Activity(
+            id: Self.pluggedInActivity,
+            moduleID: id,
+            priority: .attention,
+            expiresAt: .now + 5
+        ), for: Self.pluggedInDisplay)
+    }
+
+    static let pluggedInActivity = "plugged-in"
 
     private func show(_ newActivity: Activity, for duration: Duration) {
         clearTask?.cancel()
@@ -108,14 +127,21 @@ final class BatteryModule: PerchModule {
 
     static func tint(for reading: BatteryReading) -> Color {
         if reading.isPluggedIn { return .green }
-        if reading.percent <= lowThreshold { return .red }
+        if reading.percent <= Self.lowThreshold { return .red }
         return .white
     }
 
     // MARK: Views
 
+    func compactOverlay() -> AnyView? {
+        activity?.id == Self.pluggedInActivity ? AnyView(EnergyFlow()) : nil
+    }
+
     func compactLeading() -> AnyView {
-        AnyView(
+        if activity?.id == Self.pluggedInActivity {
+            return AnyView(ChargingLeading(isCharging: reading?.isCharging ?? true))
+        }
+        return AnyView(
             Image(systemName: reading?.isPluggedIn == true ? "bolt.fill" : "battery.25")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(reading.map(Self.tint(for:)) ?? .white)
@@ -123,7 +149,10 @@ final class BatteryModule: PerchModule {
     }
 
     func compactTrailing() -> AnyView {
-        AnyView(
+        if activity?.id == Self.pluggedInActivity, let reading {
+            return AnyView(ChargingTrailing(percent: reading.percent))
+        }
+        return AnyView(
             Text(reading.map { "\($0.percent)%" } ?? "")
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .monospacedDigit()
@@ -134,6 +163,10 @@ final class BatteryModule: PerchModule {
 
     func expanded() -> AnyView {
         AnyView(BatteryExpandedView(module: self))
+    }
+
+    func settings() -> AnyView? {
+        AnyView(BatterySettingsView())
     }
 }
 
@@ -170,4 +203,31 @@ private nonisolated func powerSourcesChanged(_ context: UnsafeMutableRawPointer?
     guard let context else { return }
     let module = Unmanaged<BatteryModule>.fromOpaque(context).takeUnretainedValue()
     MainActor.assumeIsolated { module.refresh() }
+}
+
+private struct BatterySettingsView: View {
+    @Bindable private var preferences = Preferences.shared
+
+    var body: some View {
+        VStack(spacing: 0) {
+            SettingRow("Show when power connects") {
+                Toggle("", isOn: $preferences.batteryShowOnPlugIn)
+            }
+            SettingRow("Low battery warning", hint: "The notch stays lit below this level.", last: true) {
+                HStack(spacing: 10) {
+                    Slider(value: Binding(
+                        get: { Double(preferences.batteryLowThreshold) },
+                        set: { preferences.batteryLowThreshold = Int($0) }
+                    ).snapped(to: 5), in: 5...30)
+                    .frame(width: 130)
+                    Text("\(preferences.batteryLowThreshold)%")
+                        .font(.system(size: 12, weight: .medium).monospacedDigit())
+                        .foregroundStyle(SettingsStyle.secondary)
+                        .frame(width: 32, alignment: .trailing)
+                }
+            }
+        }
+        .toggleStyle(.switch)
+        .controlSize(.small)
+    }
 }

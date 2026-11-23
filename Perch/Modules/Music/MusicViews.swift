@@ -237,7 +237,10 @@ private struct Controls: View {
     }
 
     private func button(_ symbol: String, size: CGFloat, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        Button {
+            Haptics.play(.tap)
+            action()
+        } label: {
             Image(systemName: symbol)
                 .font(.system(size: size, weight: .semibold))
                 .frame(width: 32, height: 28)
@@ -253,5 +256,24 @@ private struct PressableStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed ? 0.86 : 1)
             .opacity(configuration.isPressed ? 0.7 : 1)
             .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+struct MusicSettingsView: View {
+    @Bindable private var preferences = Preferences.shared
+
+    var body: some View {
+        SettingRow("Stay after pause", hint: preferences.musicLinger == 0
+                   ? "The notch lets go as soon as you pause."
+                   : "Keeps the notch this long after you pause.", last: true) {
+            HStack(spacing: 10) {
+                Slider(value: $preferences.musicLinger.snapped(to: 1), in: 0...30)
+                    .frame(width: 130)
+                Text(preferences.musicLinger == 0 ? "Off" : "\(Int(preferences.musicLinger)) s")
+                    .font(.system(size: 12, weight: .medium).monospacedDigit())
+                    .foregroundStyle(SettingsStyle.secondary)
+                    .frame(width: 32, alignment: .trailing)
+            }
+        }
     }
 }

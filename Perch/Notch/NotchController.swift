@@ -7,26 +7,47 @@ import AppKit
 /// events re-reads the screens and re-pins each panel.
 final class NotchController {
     private let host: ModuleHost
+    private let preferences: Preferences
     private var windows: [CGDirectDisplayID: NotchWindowController] = [:]
     private var observers: [NSObjectProtocol] = []
     private var mouseMonitors: [Any] = []
 
-    init(host: ModuleHost) {
+    init(host: ModuleHost, preferences: Preferences = .shared) {
         self.host = host
+        self.preferences = preferences
     }
 
     func start() {
         rebuild()
         observe()
+        followDisplayMode()
         monitorPointer()
     }
 
-    /// Screens that get a notch: every screen with a hardware notch, or the main
-    /// screen when none has one.
+    /// Screens that get a notch, per the display setting. "Screens with a notch"
+    /// falls back to the main screen when none has one.
     private func targetScreens() -> [NSScreen] {
-        let notched = NSScreen.screens.filter { $0.notchGeometry.hasHardwareNotch }
-        if !notched.isEmpty { return notched }
-        return NSScreen.main.map { [$0] } ?? []
+        switch preferences.displayMode {
+        case .allScreens:
+            return NSScreen.screens
+        case .mainScreen:
+            return (NSScreen.screens.first).map { [$0] } ?? []
+        case .notchedScreens:
+            let notched = NSScreen.screens.filter { $0.notchGeometry.hasHardwareNotch }
+            if !notched.isEmpty { return notched }
+            return NSScreen.screens.first.map { [$0] } ?? []
+        }
+    }
+
+    private func followDisplayMode() {
+        withObservationTracking {
+            _ = preferences.displayMode
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                self?.rebuild()
+                self?.followDisplayMode()
+            }
+        }
     }
 
     private func rebuild() {
