@@ -29,9 +29,9 @@ final class MusicModule: PerchModule {
         service.start()
         #if DEBUG
         // Screenshots and demo GIFs without anyone's real music or artwork:
-        // post the distributed notification "app.perch.debug.demoMusic".
+        // post the distributed notification "com.itcompleet.perch.debug.demoMusic".
         demoObserver = DistributedNotificationCenter.default().addObserver(
-            forName: Notification.Name("app.perch.debug.demoMusic"), object: nil, queue: .main
+            forName: Notification.Name("com.itcompleet.perch.debug.demoMusic"), object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.service.showDemo(DemoTrack.make()) }
         }

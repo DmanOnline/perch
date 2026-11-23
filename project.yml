@@ -1,6 +1,6 @@
 name: Perch
 options:
-  bundleIdPrefix: app.perch
+  bundleIdPrefix: com.itcompleet
   deploymentTarget:
     macOS: "15.0"
   createIntermediateGroups: true
@@ -34,7 +34,7 @@ targets:
         link: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.perch.Perch
+        PRODUCT_BUNDLE_IDENTIFIER: com.itcompleet.perch
         PRODUCT_NAME: Perch
         INFOPLIST_FILE: Perch/Info.plist
         GENERATE_INFOPLIST_FILE: NO
@@ -51,7 +51,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: MediaRemoteAdapter
-        PRODUCT_BUNDLE_IDENTIFIER: app.perch.MediaRemoteAdapter
+        PRODUCT_BUNDLE_IDENTIFIER: com.itcompleet.perch.MediaRemoteAdapter
         GENERATE_INFOPLIST_FILE: YES
         DEFINES_MODULE: NO
         SKIP_INSTALL: YES
@@ -71,7 +71,7 @@ targets:
       - target: Perch
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.perch.PerchTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.itcompleet.perch.tests
         GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Perch.app/Contents/MacOS/Perch"
         BUNDLE_LOADER: "$(TEST_HOST)"

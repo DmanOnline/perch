@@ -36,9 +36,9 @@ final class DevicesModule: PerchModule {
         Task { await refresh() }
         #if DEBUG
         // Replays a connection for tuning and screenshots:
-        // post the distributed notification "app.perch.debug.airpods".
+        // post the distributed notification "com.itcompleet.perch.debug.airpods".
         debugObserver = DistributedNotificationCenter.default().addObserver(
-            forName: Notification.Name("app.perch.debug.airpods"), object: nil, queue: .main
+            forName: Notification.Name("com.itcompleet.perch.debug.airpods"), object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.announce(AudioAccessory(name: "AirPods Pro", kind: .airPodsPro, left: 82, right: 79, caseLevel: 64))

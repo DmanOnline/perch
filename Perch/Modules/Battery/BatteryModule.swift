@@ -39,9 +39,9 @@ final class BatteryModule: PerchModule {
         refresh()
         #if DEBUG
         // Replays the plug-in moment without a cable, for tuning and demos:
-        // post the distributed notification "app.perch.debug.plugIn".
+        // post the distributed notification "com.itcompleet.perch.debug.plugIn".
         debugObserver = DistributedNotificationCenter.default().addObserver(
-            forName: Notification.Name("app.perch.debug.plugIn"), object: nil, queue: .main
+            forName: Notification.Name("com.itcompleet.perch.debug.plugIn"), object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.celebratePlugIn() }
         }
