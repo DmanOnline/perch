@@ -334,7 +334,8 @@ private struct AboutPane: View {
             SectionLabel("Thanks to")
             Credit("mediaremote-adapter", "Jonas van den Berg, BSD 3-Clause. Reads what is playing.")
             Credit("boring.notch", "TheBoredTeam, GPL-3. The motion Perch is tuned against.")
-            Credit("DynamicNotchKit", "Kai Azim, MIT. The shape of the notch.", last: true)
+            Credit("DynamicNotchKit", "Kai Azim, MIT. The shape of the notch.")
+            Credit("Sparkle", "The Sparkle Project, MIT. Updates.", last: true)
         }
     }
 }
