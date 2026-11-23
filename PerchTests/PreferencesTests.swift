@@ -20,6 +20,7 @@ struct PreferencesTests {
         #expect(preferences.musicLinger == 6)
         #expect(preferences.batteryLowThreshold == 10)
         #expect(preferences.isEnabled("music"))
+        #expect(preferences.hideInFullScreen)
     }
 
     @Test func changesSurviveARestart() {

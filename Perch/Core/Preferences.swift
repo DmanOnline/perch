@@ -20,6 +20,7 @@ final class Preferences {
         static let haptics = "haptics"
         static let hapticStrength = "hapticStrength"
         static let displayMode = "displayMode"
+        static let hideInFullScreen = "hideInFullScreen"
         static let disabledModules = "disabledModules"
         static let musicLinger = "music.linger"
         static let batteryShowOnPlugIn = "battery.showOnPlugIn"
@@ -40,6 +41,8 @@ final class Preferences {
     var hoverDelay: Double { didSet { defaults.set(hoverDelay, forKey: Key.hoverDelay) } }
     var hapticStrength: HapticStrength { didSet { defaults.set(hapticStrength.rawValue, forKey: Key.hapticStrength) } }
     var displayMode: DisplayMode { didSet { defaults.set(displayMode.rawValue, forKey: Key.displayMode) } }
+    /// Step aside while a video plays in full screen.
+    var hideInFullScreen: Bool { didSet { defaults.set(hideInFullScreen, forKey: Key.hideInFullScreen) } }
     private(set) var disabledModules: Set<String> {
         didSet { defaults.set(disabledModules.sorted(), forKey: Key.disabledModules) }
     }
@@ -59,6 +62,7 @@ final class Preferences {
             hapticStrength = defaults.object(forKey: Key.haptics) as? Bool == false ? .off : .strong
         }
         displayMode = defaults.string(forKey: Key.displayMode).flatMap(DisplayMode.init(rawValue:)) ?? .notchedScreens
+        hideInFullScreen = defaults.object(forKey: Key.hideInFullScreen) as? Bool ?? true
         disabledModules = Set(defaults.stringArray(forKey: Key.disabledModules) ?? [])
         musicLinger = defaults.object(forKey: Key.musicLinger) as? Double ?? Default.musicLinger
         batteryShowOnPlugIn = defaults.object(forKey: Key.batteryShowOnPlugIn) as? Bool ?? true

@@ -8,6 +8,8 @@ final class NotchWindowController {
     private let preferences = Preferences.shared
     private var openTask: Task<Void, Never>?
     private var closeTask: Task<Void, Never>?
+    /// Stepped aside for a full-screen app on this screen.
+    private(set) var isHidden = false
 
     init(host: ModuleHost, screen: NSScreen) {
         model = NotchModel(host: host, geometry: screen.notchGeometry)
@@ -40,6 +42,7 @@ final class NotchWindowController {
     /// after the hover delay (unless set to open on click). A click opens at once.
     /// Leaving closes after `hoverExit`.
     func pointerMoved(to location: NSPoint) {
+        guard !isHidden else { return }
         let inside = model.hoverRect.contains(location)
         if inside {
             closeTask?.cancel()
@@ -68,6 +71,21 @@ final class NotchWindowController {
                 guard !Task.isCancelled else { return }
                 self?.collapse()
             }
+        }
+    }
+
+    /// Fades the notch out while a full-screen app has this screen, and back
+    /// in afterwards. The panel stays in place, so nothing has to be rebuilt.
+    func setHidden(_ hidden: Bool) {
+        guard hidden != isHidden else { return }
+        isHidden = hidden
+        if hidden {
+            openTask?.cancel()
+            collapse()
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = hidden ? 0.2 : 0.35
+            panel.animator().alphaValue = hidden ? 0 : 1
         }
     }
 

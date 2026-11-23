@@ -8,20 +8,62 @@ import AppKit
 final class NotchController {
     private let host: ModuleHost
     private let preferences: Preferences
+    /// Bundle ID of the app playing media now, if any.
+    private let mediaSource: () -> String?
     private var windows: [CGDirectDisplayID: NotchWindowController] = [:]
     private var observers: [NSObjectProtocol] = []
     private var mouseMonitors: [Any] = []
 
-    init(host: ModuleHost, preferences: Preferences = .shared) {
+    init(host: ModuleHost, preferences: Preferences = .shared, mediaSource: @escaping () -> String? = { nil }) {
         self.host = host
         self.preferences = preferences
+        self.mediaSource = mediaSource
     }
 
     func start() {
         rebuild()
         observe()
         followDisplayMode()
+        followFullScreenSetting()
         monitorPointer()
+    }
+
+    // MARK: Full screen
+
+    private var fullScreenCheck: Task<Void, Never>?
+
+    /// Hides the notch on screens where a video plays in full screen. Checked
+    /// when the Space, the frontmost app or the media source changes, and once
+    /// more after a Space animation has settled, since windows move during it.
+    private func updateFullScreen() {
+        fullScreenCheck?.cancel()
+        applyFullScreen()
+        fullScreenCheck = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(700))
+            guard !Task.isCancelled else { return }
+            self?.applyFullScreen()
+        }
+    }
+
+    private func applyFullScreen() {
+        let covered = preferences.hideInFullScreen
+            ? FullScreenDetector.screensWatchingVideo(mediaSource: mediaSource())
+            : []
+        for (id, window) in windows {
+            window.setHidden(covered.contains(id))
+        }
+    }
+
+    private func followFullScreenSetting() {
+        withObservationTracking {
+            _ = preferences.hideInFullScreen
+            _ = mediaSource()
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                self?.applyFullScreen()
+                self?.followFullScreenSetting()
+            }
+        }
     }
 
     /// Screens that get a notch, per the display setting. "Screens with a notch"
@@ -65,6 +107,7 @@ final class NotchController {
             window.close()
         }
         windows = next
+        updateFullScreen()
     }
 
     private func observe() {
@@ -79,6 +122,9 @@ final class NotchController {
             workspace.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: .main, using: refresh),
             workspace.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main, using: refresh),
             workspace.addObserver(forName: NSWorkspace.sessionDidBecomeActiveNotification, object: nil, queue: .main, using: refresh),
+            workspace.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.updateFullScreen() }
+            },
         ]
     }
 

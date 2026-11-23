@@ -172,6 +172,9 @@ private struct GeneralPane: View {
             }
 
             SectionLabel("Displays")
+            SettingRow("Hide during full-screen video", hint: "Steps aside while you watch in full screen. Full-screen apps like Claude or Xcode keep the notch.") {
+                Toggle("", isOn: $preferences.hideInFullScreen)
+            }
             SettingRow("Show Perch on", hint: displayHint, last: true) {
                 ChipPicker(selection: $preferences.displayMode, options: [
                     (.notchedScreens, "Notch"),
