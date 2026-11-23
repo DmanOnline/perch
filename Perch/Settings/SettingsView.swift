@@ -174,6 +174,16 @@ private struct GeneralPane: View {
                 }
             }
 
+            SectionLabel("Look")
+            SettingRow("Open notch", hint: preferences.notchStyle == .glass
+                       ? "Liquid Glass, fading into black where it meets the notch."
+                       : "Solid black, like the notch itself.", last: true) {
+                ChipPicker(selection: $preferences.notchStyle, options: [
+                    (.black, "Black"),
+                    (.glass, "Glass"),
+                ])
+            }
+
             SectionLabel("At rest")
             SettingRow("Sneak peek", hint: restingHint, last: true) {
                 ChipPicker(selection: $preferences.restingModule, options: [

@@ -12,8 +12,26 @@ final class SettingsWindowController {
     func show() {
         let window = self.window ?? makeWindow()
         self.window = window
+        let wasVisible = window.isVisible
+        if !wasVisible { window.layoutIfNeeded() }
         NSApp.activate()
         window.makeKeyAndOrderFront(nil)
+        // Placed after it has laid out: only then does it know its size.
+        if !wasVisible { placeUnderNotch(window) }
+    }
+
+    /// Centred just below the notch on the screen with the pointer: it opens
+    /// from the notch, so it appears where you were looking.
+    private func placeUnderNotch(_ window: NSWindow) {
+        let pointer = NSEvent.mouseLocation
+        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(pointer) }) ?? NSScreen.main else {
+            window.center()
+            return
+        }
+        let visible = screen.visibleFrame
+        let size = window.frame.size
+        window.setFrameOrigin(NSPoint(x: visible.midX - size.width / 2,
+                                      y: max(visible.minY, visible.maxY - size.height - 24)))
     }
 
     private func makeWindow() -> NSWindow {
@@ -33,8 +51,6 @@ final class SettingsWindowController {
         let hosting = NSHostingController(rootView: SettingsView(host: host))
         hosting.sizingOptions = [.preferredContentSize]
         window.contentViewController = hosting
-        window.center()
-        window.setFrameAutosaveName("PerchSettings")
         return window
     }
 }

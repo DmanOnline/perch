@@ -14,7 +14,8 @@ struct NotchView: View {
         let body = model.bodySize
         let shape = NotchShape(earRadius: ear, bottomRadius: NotchMetrics.bottomRadius(for: state))
         ZStack(alignment: .top) {
-            shape.fill(.black)
+            NotchBackground(shape: shape, glass: state == .expanded && Preferences.shared.notchStyle == .glass,
+                            meltHeight: model.geometry.notchSize.height + 18)
             wings
                 .padding(.horizontal, ear)
             content
@@ -232,4 +233,56 @@ private struct CaffeineButton: View {
         guard let end = caffeine.endsAt else { return "Keeping awake until turned off" }
         return "Keeping awake until \(end.formatted(date: .omitted, time: .shortened))"
     }
+}
+
+/// The body of the notch. Black, like the hardware notch, unless the user
+/// chose Glass: then the open notch is Liquid Glass (macOS 26; a dark blur
+/// before that), tinted dark for legible white text and fading into black at
+/// the top, where it meets the real notch.
+private struct NotchBackground: View {
+    let shape: NotchShape
+    let glass: Bool
+    let meltHeight: CGFloat
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            if glass {
+                glassFill
+                    .transition(.opacity)
+                LinearGradient(colors: [.black, .black, .black.opacity(0)],
+                               startPoint: .top, endPoint: .bottom)
+                    .frame(height: meltHeight)
+                    .allowsHitTesting(false)
+            }
+            shape.fill(.black)
+                .opacity(glass ? 0 : 1)
+        }
+        .animation(.smooth(duration: 0.35), value: glass)
+    }
+
+    @ViewBuilder
+    private var glassFill: some View {
+        if #available(macOS 26, *) {
+            Color.clear
+                .glassEffect(.regular.tint(.black.opacity(0.45)), in: shape)
+        } else {
+            VisualEffectBlur()
+                .overlay(Color.black.opacity(0.35))
+                .clipShape(shape)
+        }
+    }
+}
+
+/// macOS 15's dark behind-window blur, the fallback for Liquid Glass.
+private struct VisualEffectBlur: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .hudWindow
+        view.blendingMode = .behindWindow
+        view.state = .active
+        view.appearance = NSAppearance(named: .darkAqua)
+        return view
+    }
+
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {}
 }

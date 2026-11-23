@@ -1,6 +1,11 @@
 import Foundation
 import Observation
 
+nonisolated enum NotchStyle: String, CaseIterable, Sendable {
+    case black
+    case glass
+}
+
 nonisolated enum DisplayMode: String, CaseIterable, Sendable {
     /// Every screen with a hardware notch; the main screen when none has one.
     case notchedScreens
@@ -22,6 +27,7 @@ final class Preferences {
         static let displayMode = "displayMode"
         static let hideInFullScreen = "hideInFullScreen"
         static let gestures = "gestures"
+        static let notchStyle = "notchStyle"
         static let restingModule = "restingModule"
         static let disabledModules = "disabledModules"
         static let musicLinger = "music.linger"
@@ -47,6 +53,8 @@ final class Preferences {
     var hideInFullScreen: Bool { didSet { defaults.set(hideInFullScreen, forKey: Key.hideInFullScreen) } }
     /// Two-finger swipes on the trackpad over the notch.
     var gestures: Bool { didSet { defaults.set(gestures, forKey: Key.gestures) } }
+    /// Black like the hardware notch, or Liquid Glass when open.
+    var notchStyle: NotchStyle { didSet { defaults.set(notchStyle.rawValue, forKey: Key.notchStyle) } }
     /// Module kept visible next to the notch when nothing is happening; empty for none.
     var restingModule: String { didSet { defaults.set(restingModule, forKey: Key.restingModule) } }
     private(set) var disabledModules: Set<String> {
@@ -70,6 +78,7 @@ final class Preferences {
         displayMode = defaults.string(forKey: Key.displayMode).flatMap(DisplayMode.init(rawValue:)) ?? .notchedScreens
         hideInFullScreen = defaults.object(forKey: Key.hideInFullScreen) as? Bool ?? true
         gestures = defaults.object(forKey: Key.gestures) as? Bool ?? true
+        notchStyle = defaults.string(forKey: Key.notchStyle).flatMap(NotchStyle.init(rawValue:)) ?? .black
         restingModule = defaults.string(forKey: Key.restingModule) ?? ""
         disabledModules = Set(defaults.stringArray(forKey: Key.disabledModules) ?? [])
         musicLinger = defaults.object(forKey: Key.musicLinger) as? Double ?? Default.musicLinger
