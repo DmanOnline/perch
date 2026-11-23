@@ -35,7 +35,7 @@ jobs:
           mkdir -p build
           xcodebuild test \
             -scheme Perch \
-            -destination 'generic/platform=macOS' \
+            -destination 'platform=macOS' \
             -derivedDataPath build/DerivedData \
             > build/test.log 2>&1 || { grep -E '✘|error:|\*\* TEST' build/test.log; exit 1; }
           grep -E '^(✔|✘)|\*\* TEST' build/test.log
