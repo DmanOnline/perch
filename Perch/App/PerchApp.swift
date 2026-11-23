@@ -20,7 +20,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // As the unit-test host, stay inert: no notch, no helper processes.
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
         let music = MusicModule()
-        let host = ModuleHost(modules: [music, BatteryModule()])
+        let devices = DevicesModule()
+        let battery = BatteryModule()
+        battery.devices = devices
+        let host = ModuleHost(modules: [music, TimerModule(), devices, battery])
         host.start()
         let notch = NotchController(host: host) { music.nowPlaying?.bundleID }
         notch.start()

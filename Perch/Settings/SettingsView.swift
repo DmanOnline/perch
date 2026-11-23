@@ -171,6 +171,15 @@ private struct GeneralPane: View {
                 }
             }
 
+            SectionLabel("At rest")
+            SettingRow("Sneak peek", hint: restingHint, last: true) {
+                ChipPicker(selection: $preferences.restingModule, options: [
+                    ("", "Off"),
+                    ("music", "Music"),
+                    ("battery", "Battery"),
+                ])
+            }
+
             SectionLabel("Displays")
             SettingRow("Hide during full-screen video", hint: "Steps aside while you watch in full screen. Full-screen apps like Claude or Xcode keep the notch.") {
                 Toggle("", isOn: $preferences.hideInFullScreen)
@@ -185,6 +194,14 @@ private struct GeneralPane: View {
         }
         .toggleStyle(.switch)
         .controlSize(.small)
+    }
+
+    private var restingHint: String {
+        switch preferences.restingModule {
+        case "music": "Artwork stays beside the notch while something is loaded, even paused."
+        case "battery": "The battery level stays beside the notch."
+        default: "When nothing is happening, the notch is just the notch."
+        }
     }
 
     private var hapticHint: String {

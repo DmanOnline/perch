@@ -32,6 +32,8 @@ final class BatteryModule: PerchModule {
     @ObservationIgnored private var runLoopSource: CFRunLoopSource?
     @ObservationIgnored private var clearTask: Task<Void, Never>?
     @ObservationIgnored private var debugObserver: NSObjectProtocol?
+    /// AirPods and headphones, shown beside the Mac's battery in the tab.
+    @ObservationIgnored weak var devices: DevicesModule?
 
     func start() {
         refresh()
@@ -135,8 +137,8 @@ final class BatteryModule: PerchModule {
     }
 
     static func tint(for reading: BatteryReading) -> Color {
-        if reading.isPluggedIn { return .green }
-        if reading.percent <= Self.lowThreshold { return .red }
+        if reading.isPluggedIn { return ChargingStyle.green }
+        if reading.percent <= Self.lowThreshold { return Color(red: 1, green: 0.27, blue: 0.23) }
         return .white
     }
 
@@ -146,14 +148,25 @@ final class BatteryModule: PerchModule {
         activity?.id == Self.pluggedInActivity ? AnyView(EnergyFlow()) : nil
     }
 
+    /// Sneak peek: the battery level, always.
+    var restingActivity: Activity? {
+        reading == nil ? nil : Activity(id: "resting", moduleID: id, priority: .background, startedAt: .distantPast)
+    }
+
     func compactLeading() -> AnyView {
         if activity?.id == Self.pluggedInActivity {
             return AnyView(ChargingLeading(isCharging: reading?.isCharging ?? true))
         }
         return AnyView(
-            Image(systemName: reading?.isPluggedIn == true ? "bolt.fill" : "battery.25")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(reading.map(Self.tint(for:)) ?? .white)
+            BatteryGlyph(
+                level: Double(reading?.percent ?? 0) / 100,
+                width: 25,
+                fill: reading.map(Self.tint(for:)) ?? .white,
+                showsBolt: reading?.isPluggedIn == true,
+                glow: 0.2
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 8)
         )
     }
 
@@ -163,10 +176,12 @@ final class BatteryModule: PerchModule {
         }
         return AnyView(
             Text(reading.map { "\($0.percent)%" } ?? "")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(.system(size: 13.5, weight: .bold))
                 .monospacedDigit()
                 .foregroundStyle(reading.map(Self.tint(for:)) ?? .white)
                 .contentTransition(.numericText())
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.trailing, 8)
         )
     }
 
@@ -183,12 +198,20 @@ private struct BatteryExpandedView: View {
     let module: BatteryModule
     @State private var shownLevel = 0.0
 
+    /// The AirPods or headphones to show, if the AirPods module is on and
+    /// something is connected: the one that just arrived, else one with a battery.
+    private var accessory: AudioAccessory? {
+        guard let devices = module.devices, Preferences.shared.isEnabled(devices.id) else { return nil }
+        return devices.arrived.flatMap { arrived in devices.accessories.first { $0.name == arrived.name } ?? arrived }
+            ?? devices.accessories.first(where: \.hasBattery)
+    }
+
     var body: some View {
         if let reading = module.reading {
-            HStack(spacing: 26) {
+            HStack(spacing: accessory == nil ? 26 : 18) {
                 BatteryGlyph(
                     level: shownLevel,
-                    width: 118,
+                    width: accessory == nil ? 118 : 92,
                     fill: Self.fill(for: reading),
                     showsBolt: reading.isPluggedIn,
                     glow: Self.fill(for: reading) == .white ? 0.12 : 0.5
@@ -225,8 +248,17 @@ private struct BatteryExpandedView: View {
                     }
                 }
                 Spacer(minLength: 0)
+                if let accessory {
+                    Rectangle()
+                        .fill(.white.opacity(0.1))
+                        .frame(width: 1, height: 96)
+                    AccessoryBatteries(accessory: accessory)
+                        .transition(.opacity.combined(with: .move(edge: .trailing)))
+                }
             }
             .padding(.leading, 12)
+            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: accessory)
+            .task { await module.devices?.refresh() }
             .onAppear { shownLevel = Double(reading.percent) / 100 }
             .onChange(of: reading.percent) { _, percent in shownLevel = Double(percent) / 100 }
         } else {

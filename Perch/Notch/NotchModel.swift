@@ -30,9 +30,18 @@ final class NotchModel {
     /// Module shown when expanded: the one that currently has the notch,
     /// otherwise the tab the user picked, otherwise the first.
     var expandedModule: (any PerchModule)? {
-        if let selectedModuleID, let module = host.module(id: selectedModuleID) { return module }
-        if let current = host.current, let module = host.module(id: current.moduleID) { return module }
+        if let selectedModuleID, let module = host.module(id: selectedModuleID) { return tab(of: module) }
+        if let current = host.current, let module = host.module(id: current.moduleID) { return tab(of: module) }
         return host.enabledModules.first
+    }
+
+    /// Modules that have a tab of their own, in order.
+    var tabs: [any PerchModule] {
+        host.enabledModules.filter { $0.tabID == $0.id }
+    }
+
+    private func tab(of module: any PerchModule) -> any PerchModule {
+        host.module(id: module.tabID) ?? module
     }
 
     /// Area of the screen where the pointer keeps (or makes) the notch open.

@@ -1,0 +1,7 @@
+// Signing. Ad-hoc by default, so CI and anyone cloning can build.
+// On a Mac with a stable certificate, Config/Local.xcconfig (not in git)
+// overrides the identity, so macOS keeps permissions such as Bluetooth
+// between builds instead of asking again after every build.
+CODE_SIGN_IDENTITY = -
+ENABLE_HARDENED_RUNTIME = YES
+#include? "Local.xcconfig"

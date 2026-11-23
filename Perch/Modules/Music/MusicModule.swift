@@ -73,6 +73,11 @@ final class MusicModule: PerchModule {
         }
     }
 
+    /// Sneak peek: artwork and a resting equalizer whenever something is loaded.
+    var restingActivity: Activity? {
+        nowPlaying == nil ? nil : Activity(id: "resting", moduleID: id, priority: .background, startedAt: .distantPast)
+    }
+
     func openSourceApp() {
         guard let bundleID = nowPlaying?.bundleID,
               let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { return }

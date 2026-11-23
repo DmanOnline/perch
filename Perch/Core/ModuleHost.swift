@@ -19,8 +19,13 @@ final class ModuleHost {
         modules.filter { preferences.isEnabled($0.id) }
     }
 
+    /// What has the notch: the most important activity, or else the sneak peek
+    /// of the module the user chose to keep visible.
     var current: Activity? {
-        Arbiter.select(enabledModules.compactMap(\.activity), now: .now)
+        if let active = Arbiter.select(enabledModules.compactMap(\.activity), now: .now) {
+            return active
+        }
+        return module(id: preferences.restingModule)?.restingActivity
     }
 
     func module(id: String) -> (any PerchModule)? {

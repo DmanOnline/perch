@@ -55,9 +55,17 @@ protocol PerchModule: AnyObject {
     /// Drawn across the whole compact notch, above the wings and clipped to the
     /// notch shape, for effects that span both sides.
     func compactOverlay() -> AnyView?
+    /// What to keep in the notch when nothing is happening, if the user chose
+    /// this module for the sneak peek. Nil when there is nothing worth showing.
+    var restingActivity: Activity? { get }
+    /// The tab this module lives in when the notch is open. Its own `id` gives
+    /// it a tab; another module's id folds it into that tab instead.
+    var tabID: String { get }
 }
 
 extension PerchModule {
     func settings() -> AnyView? { nil }
     func compactOverlay() -> AnyView? { nil }
+    var restingActivity: Activity? { nil }
+    var tabID: String { id }
 }

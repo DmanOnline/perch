@@ -73,7 +73,7 @@ App (SwiftUI + AppKit, macOS 15+)
 | Versie | Thema | Inhoud | Klaar als |
 |---|---|---|---|
 | **0.1** | Fundament | NotchWindow op alle schermen, hover open/dicht, slaap/wake-bestendig; Music-module (nu speelt, bediening, artwork); instellingen; CI-build; Homebrew-cask | Een week dagelijks gebruik zonder dat de notch verdwijnt |
-| **0.2** | Onderscheidend | Claude Code-module (welke sessie werkt, welke wacht op jou, via de officiële Claude Code-hooks); permanent zichtbare sneak peek (#797) | Eerste publieke release met README en demo-GIF |
+| **0.2** | Dynamic Island-gevoel | AirPods en Bluetooth (verbinden met batterij per oortje), timer in de vleugels, permanent zichtbare sneak peek (#797); niet-genotariseerde release met eigen Homebrew-tap | Eerste publieke release met README en demo-GIF |
 | **0.3** | Pariteit | HUD-vervanging, batterij en Bluetooth, agenda, bestandsplank met AirDrop | Alles wat boring.notch kan, minimaal even goed |
 | **0.4** | Platform | Externe extensies (losse bundels), notificaties spiegelen (#592, meest gevraagd), Liquid Glass-stijl (#922) | Eerste extensie van iemand anders |
 
@@ -102,3 +102,5 @@ Gekozen op basis van de meest gevraagde boring.notch-issues (2026-11-23): notifi
 - [x] Minimum-macOS: 15 Sequoia (2026-11-23). Elke MacBook met notch kan naar 15; alleen oudere Macs zonder notch vallen af
 - [ ] Apple Developer ID nemen, nu of bij 0.2
 - [ ] Xcode installeren (alleen macOS-platform)
+
+Keuze 0.2 herzien op 2026-11-23 na onderzoek naar wat gebruikers vragen (boring.notch-issues op stemmen, reviews van Alcove en NotchNook, Atoll): Claude Code had 3 stemmen en schuift naar later, als module of als eerste externe extensie.

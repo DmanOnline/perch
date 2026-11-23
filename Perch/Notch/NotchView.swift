@@ -89,7 +89,7 @@ struct NotchView: View {
 
     private var header: some View {
         HStack(spacing: 0) {
-            ForEach(model.host.enabledModules, id: \.id) { module in
+            ForEach(model.tabs, id: \.id) { module in
                 HeaderButton(symbol: module.symbol, size: 12,
                              isSelected: model.expandedModule?.id == module.id, help: module.title) {
                     model.selectedModuleID = module.id
