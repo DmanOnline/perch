@@ -24,7 +24,12 @@ final class NotchModel {
     }
 
     var bodySize: CGSize {
-        NotchMetrics.bodySize(for: state, notch: geometry.notchSize, peeking: isPeeking)
+        var size = NotchMetrics.bodySize(for: state, notch: geometry.notchSize, peeking: isPeeking)
+        // A tab can ask for more room, like the Mirror.
+        if state == .expanded, let height = expandedModule?.expandedHeight {
+            size.height = min(height, NotchMetrics.maxExpandedHeight)
+        }
+        return size
     }
 
     /// Module shown when expanded: the one that currently has the notch,

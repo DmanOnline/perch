@@ -45,6 +45,8 @@ struct NotchView: View {
         .animation(.smooth(duration: 0.3), value: model.host.current)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: model.isPeeking)
         .animation(state == .expanded ? NotchMetrics.openAnimation : NotchMetrics.closeAnimation, value: state)
+        // Switching to a taller tab (the Mirror) grows the notch on the same spring.
+        .animation(NotchMetrics.openAnimation, value: model.bodySize.height)
         .preferredColorScheme(.dark)
     }
 

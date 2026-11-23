@@ -42,7 +42,8 @@ struct NotchGeometryTests {
         let panel = NotchMetrics.panelSize(notch: notch)
         let expanded = NotchMetrics.bodySize(for: .expanded, notch: notch)
         #expect(panel.width >= expanded.width + 2 * NotchMetrics.earRadius(for: .expanded) + 2 * NotchMetrics.shadowPadding)
-        #expect(panel.height == expanded.height + NotchMetrics.shadowPadding)
+        #expect(panel.height >= NotchMetrics.maxExpandedHeight + NotchMetrics.shadowPadding)
+        #expect(panel.height >= expanded.height + NotchMetrics.shadowPadding)
     }
 
     @Test func closedBodyMatchesNotchExactly() {

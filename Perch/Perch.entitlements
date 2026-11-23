@@ -7,5 +7,8 @@
 	     framework (Sparkle), even one signed with the same certificate. -->
 	<key>com.apple.security.cs.disable-library-validation</key>
 	<true/>
+	<!-- Hardened runtime blocks the camera unless the app declares it: the Mirror. -->
+	<key>com.apple.security.device.camera</key>
+	<true/>
 </dict>
 </plist>

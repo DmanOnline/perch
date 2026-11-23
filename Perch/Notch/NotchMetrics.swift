@@ -45,11 +45,15 @@ nonisolated enum NotchMetrics {
     }
 
     /// Size of the panel: the expanded body with its ears, plus room for the shadow.
+    /// The tallest any tab may make the open notch (the Mirror); the panel is
+    /// sized for it so a taller tab never runs out of window.
+    static let maxExpandedHeight: CGFloat = 380
+
     static func panelSize(notch: CGSize) -> CGSize {
         let body = bodySize(for: .expanded, notch: notch)
         return CGSize(
             width: body.width + 2 * earRadius(for: .expanded) + 2 * shadowPadding,
-            height: body.height + shadowPadding
+            height: max(body.height, maxExpandedHeight) + shadowPadding
         )
     }
 }

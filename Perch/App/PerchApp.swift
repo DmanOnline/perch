@@ -23,7 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let devices = DevicesModule()
         let battery = BatteryModule()
         battery.devices = devices
-        let host = ModuleHost(modules: [music, TimerModule(), ShelfModule(), devices, battery, HUDModule()])
+        let host = ModuleHost(modules: [music, TimerModule(), ShelfModule(), MirrorModule(), devices, battery, HUDModule()])
         host.start()
         // The app whose media is playing, if any: its full-screen window is a film.
         let notch = NotchController(host: host) { music.nowPlaying.flatMap { $0.isPlaying ? $0.bundleID : nil } }

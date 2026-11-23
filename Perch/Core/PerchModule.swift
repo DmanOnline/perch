@@ -61,6 +61,9 @@ protocol PerchModule: AnyObject {
     /// The tab this module lives in when the notch is open. Its own `id` gives
     /// it a tab; another module's id folds it into that tab instead.
     var tabID: String { get }
+    /// Height of the open notch on this module's tab, when it needs more than
+    /// the usual; nil keeps the standard height.
+    var expandedHeight: CGFloat? { get }
 }
 
 extension PerchModule {
@@ -68,4 +71,5 @@ extension PerchModule {
     func compactOverlay() -> AnyView? { nil }
     var restingActivity: Activity? { nil }
     var tabID: String { id }
+    var expandedHeight: CGFloat? { nil }
 }
