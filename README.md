@@ -57,6 +57,12 @@ The notch on your MacBook is a hole in the screen. Perch turns it into a living 
 
 **Keep awake.** One click on the cup keeps your Mac awake, until you turn it off or for 30 minutes to 2 hours.
 
+**A mirror at the camera.** The Mirror tab shows your camera, mirrored, for a look before a call. The camera runs only while you look.
+
+**Gestures.** Two fingers on the trackpad over the notch: down opens, up closes, sideways skips a track while music plays and changes tab otherwise, and up and down on the volume pop-up sets the volume.
+
+**Black or glass.** Keep the open notch solid black like the notch itself, or switch it to Liquid Glass that fades into black where it meets the notch.
+
 **Feels like hardware.** Springs tuned to land without wobble, a tap on the trackpad when you reach the notch and a firmer one when it opens. The notch stays perfectly still when you swipe between desktops, comes back after sleep and display changes, and steps aside while you watch a video in full screen.
 
 **Yours to tune.** Hover or click to open, how long to wait, how strong the haptics are, which screens get a notch, which modules run, and whether music or your battery stays beside the notch when nothing is happening.
@@ -122,9 +128,10 @@ The full plan, including what is coming and why, is in [docs/PLAN.md](docs/PLAN.
 | Version | Focus | Status |
 |---|---|---|
 | 0.1 | The foundation: notch window, music, battery, settings | Done |
-| 0.2 | Dynamic Island moments: AirPods, timer, volume and brightness, shelf, keep awake, sneak peek; signed releases, updates, Homebrew | Releasing |
-| 0.3 | Calendar with join buttons, Claude Code sessions, Bluetooth devices beyond audio | Planned |
-| 0.4 | Extensions from other developers, mirrored notifications, Liquid Glass | Planned |
+| 0.2 | Dynamic Island moments: AirPods, timer, volume and brightness, shelf, keep awake, sneak peek; signed releases, updates, Homebrew | Done |
+| 0.3 | Trackpad gestures, mirror, Liquid Glass | Done |
+| 0.4 | Coding agents in the notch (Claude Code sessions, answer permission prompts), calendar with join buttons | Next |
+| Later | Mirrored notifications, extensions from other developers | Planned |
 
 ## Contributing
 
