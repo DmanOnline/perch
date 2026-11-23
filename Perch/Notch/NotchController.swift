@@ -45,12 +45,23 @@ final class NotchController {
         }
     }
 
+    /// Screens hidden for a video, and the app whose full-screen window it was.
+    /// Pausing the film keeps the notch away until that window leaves.
+    private var watching: [CGDirectDisplayID: pid_t] = [:]
+
     private func applyFullScreen() {
-        let covered = preferences.hideInFullScreen
-            ? FullScreenDetector.screensWatchingVideo(mediaSource: mediaSource())
-            : []
+        let apps = preferences.hideInFullScreen ? FullScreenDetector.coveringApps() : [:]
+        let source = mediaSource()
+        var next: [CGDirectDisplayID: pid_t] = [:]
+        for (id, app) in apps where watching[id] == app.pid
+            || FullScreenDetector.isWatchingVideo(owner: app.bundleID, mediaSource: source) {
+            next[id] = app.pid
+        }
+        watching = next
+        // Volume and brightness still come through, as they do over a video on iPhone.
+        let showsLevel = host.current?.moduleID == "hud"
         for (id, window) in windows {
-            window.setHidden(covered.contains(id))
+            window.setHidden(next[id] != nil && !showsLevel)
         }
     }
 
@@ -58,6 +69,7 @@ final class NotchController {
         withObservationTracking {
             _ = preferences.hideInFullScreen
             _ = mediaSource()
+            _ = host.current?.moduleID
         } onChange: { [weak self] in
             Task { @MainActor in
                 self?.applyFullScreen()

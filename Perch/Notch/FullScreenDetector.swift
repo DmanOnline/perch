@@ -51,7 +51,9 @@ nonisolated enum FullScreenDetector {
     }
 
     /// True when a full-screen window of `owner` means someone is watching video:
-    /// it is a video player, or it is the app that is playing media right now.
+    /// it is a video player, or it is the app whose media is playing right now
+    /// (`mediaSource` is only set while something plays: a browser in full
+    /// screen with a paused tab somewhere is just a browser).
     static func isWatchingVideo(owner: String?, mediaSource: String?) -> Bool {
         guard let owner else { return false }
         if videoPlayers.contains(owner) { return true }
@@ -59,11 +61,11 @@ nonisolated enum FullScreenDetector {
         return owner == mediaSource
     }
 
-    /// Screens where a video is playing in full screen right now.
+    /// For each screen covered by another app's full-screen window: that app.
     @MainActor
-    static func screensWatchingVideo(mediaSource: String?) -> Set<CGDirectDisplayID> {
+    static func coveringApps() -> [CGDirectDisplayID: (pid: pid_t, bundleID: String?)] {
         let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
-        guard let info = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else { return [] }
+        guard let info = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else { return [:] }
         let windows = info.compactMap { entry -> Window? in
             guard let boundsDict = entry[kCGWindowBounds as String] as? NSDictionary,
                   let bounds = CGRect(dictionaryRepresentation: boundsDict),
@@ -78,9 +80,6 @@ nonisolated enum FullScreenDetector {
             screens[id] = CGDisplayBounds(id)
         }
         let owners = coveringOwners(windows: windows, screens: screens, ownPID: ProcessInfo.processInfo.processIdentifier)
-        return Set(owners.compactMap { id, pid in
-            let bundleID = NSRunningApplication(processIdentifier: pid)?.bundleIdentifier
-            return isWatchingVideo(owner: bundleID, mediaSource: mediaSource) ? id : nil
-        })
+        return owners.mapValues { pid in (pid, NSRunningApplication(processIdentifier: pid)?.bundleIdentifier) }
     }
 }

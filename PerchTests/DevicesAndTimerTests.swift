@@ -140,3 +140,20 @@ struct AccessoryPowerSourcesTests {
         #expect(headset.first?.singleCharging == true)
     }
 }
+
+struct MediaKeyTests {
+    @Test func decodesVolumeAndBrightnessKeys() {
+        // NX_KEYTYPE_SOUND_UP (0) pressed: code in the high half, 0xA in the state byte.
+        #expect(MediaKey.decode(subtype: 8, data1: (0 << 16) | 0x0A00)?.key == .volumeUp)
+        #expect(MediaKey.decode(subtype: 8, data1: (0 << 16) | 0x0A00)?.isDown == true)
+        #expect(MediaKey.decode(subtype: 8, data1: (3 << 16) | 0x0B00)?.key == .brightnessDown)
+        #expect(MediaKey.decode(subtype: 8, data1: (3 << 16) | 0x0B00)?.isDown == false)
+        #expect(MediaKey.decode(subtype: 8, data1: (7 << 16) | 0x0A00)?.key == .mute)
+    }
+
+    @Test func otherKeysPassThrough() {
+        // Play/pause (16) and other subtypes are not Perch's.
+        #expect(MediaKey.decode(subtype: 8, data1: (16 << 16) | 0x0A00) == nil)
+        #expect(MediaKey.decode(subtype: 7, data1: (0 << 16) | 0x0A00) == nil)
+    }
+}

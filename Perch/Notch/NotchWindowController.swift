@@ -47,6 +47,12 @@ final class NotchWindowController {
         if inside {
             closeTask?.cancel()
             closeTask = nil
+            // Carrying files to the notch: open the Shelf right away to take them.
+            if Self.isDraggingFiles, model.host.module(id: "shelf") != nil {
+                model.selectedModuleID = "shelf"
+                open()
+                return
+            }
             guard !model.isHovering, !model.isPeeking else { return }
             model.isPeeking = true
             panel.ignoresMouseEvents = false
@@ -87,6 +93,11 @@ final class NotchWindowController {
             context.duration = hidden ? 0.2 : 0.35
             panel.animator().alphaValue = hidden ? 0 : 1
         }
+    }
+
+    private static var isDraggingFiles: Bool {
+        guard NSEvent.pressedMouseButtons & 1 != 0 else { return false }
+        return NSPasteboard(name: .drag).canReadObject(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true])
     }
 
     private func open() {

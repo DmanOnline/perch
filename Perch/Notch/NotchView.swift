@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NotchView: View {
     let model: NotchModel
+    @State private var isDropTarget = false
 
     private var state: NotchState { model.state }
     private var ear: CGFloat { NotchMetrics.earRadius(for: state) }
@@ -31,6 +32,15 @@ struct NotchView: View {
         .onTapGesture {
             if state != .expanded { model.onRequestOpen?() }
         }
+        .onDrop(of: [.fileURL], isTargeted: $isDropTarget) { providers in
+            receive(providers)
+            return true
+        }
+        .onChange(of: isDropTarget) { _, targeted in
+            guard targeted else { return }
+            model.selectedModuleID = "shelf"
+            model.onRequestOpen?()
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .animation(.smooth(duration: 0.3), value: model.host.current)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: model.isPeeking)
@@ -56,6 +66,19 @@ struct NotchView: View {
                 }
             }
             .transition(AnyTransition(.blurReplace).combined(with: .scale(scale: 0.94, anchor: .top)))
+        }
+    }
+
+    /// Files dropped anywhere on the notch go on the Shelf.
+    private func receive(_ providers: [NSItemProvider]) {
+        for provider in providers {
+            _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                guard let url, url.isFileURL else { return }
+                Task { @MainActor in
+                    (model.host.module(id: "shelf") as? ShelfModule)?.add([url])
+                    model.selectedModuleID = "shelf"
+                }
+            }
         }
     }
 
@@ -96,6 +119,7 @@ struct NotchView: View {
                 }
             }
             Spacer(minLength: model.geometry.notchSize.width)
+            CaffeineButton()
             HeaderButton(symbol: "gearshape.fill", size: 11, help: "Perch Settings") {
                 SettingsWindowController.shared.show()
             }
@@ -161,5 +185,49 @@ private struct HeaderButton: View {
         .onHover { isHovered = $0 }
         .animation(.easeOut(duration: 0.15), value: isHovered)
         .help(help)
+    }
+}
+
+/// Keep-awake: a click toggles it until turned off; the menu offers a duration.
+/// The cup fills amber while the Mac is kept awake.
+private struct CaffeineButton: View {
+    @Bindable private var caffeine = Caffeine.shared
+    @State private var isHovered = false
+
+    var body: some View {
+        Menu {
+            ForEach(Caffeine.durations, id: \.label) { option in
+                Button(option.label) { caffeine.start(minutes: option.minutes) }
+            }
+            if caffeine.isActive {
+                Divider()
+                Button("Turn off") { caffeine.stop() }
+            }
+        } label: {
+            Image(systemName: caffeine.isActive ? "cup.and.heat.waves.fill" : "cup.and.saucer")
+                .font(.system(size: 11.5, weight: .semibold))
+                .foregroundStyle(caffeine.isActive ? Color(red: 1, green: 0.70, blue: 0.14) : .white.opacity(0.85))
+                .contentTransition(.symbolEffect(.replace))
+                .frame(width: 30, height: 24)
+                .background(Capsule().fill(.white.opacity(isHovered ? 0.08 : 0)))
+                .padding(.horizontal, 3)
+                .padding(.vertical, 4)
+                .contentShape(Rectangle())
+        } primaryAction: {
+            caffeine.toggle()
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .onHover { isHovered = $0 }
+        .animation(.easeOut(duration: 0.15), value: isHovered)
+        .help(helpText)
+    }
+
+    private var helpText: String {
+        guard caffeine.isActive else { return "Keep awake (click), or hold for a duration" }
+        guard let end = caffeine.endsAt else { return "Keeping awake until turned off" }
+        return "Keeping awake until \(end.formatted(date: .omitted, time: .shortened))"
     }
 }
