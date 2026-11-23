@@ -18,6 +18,8 @@ final class NowPlayingService {
     @ObservationIgnored private var isRunning = false
     @ObservationIgnored private var failures = 0
     @ObservationIgnored private var restartTask: Task<Void, Never>?
+    /// Debug only: a made-up track for screenshots, with the real stream off.
+    @ObservationIgnored private var isDemo = false
 
     private static let perl = URL(filePath: "/usr/bin/perl")
 
@@ -131,8 +133,16 @@ final class NowPlayingService {
         onChange?()
     }
 
+    #if DEBUG
+    func showDemo(_ state: NowPlaying) {
+        stop()
+        isDemo = true
+        update(state)
+    }
+    #endif
+
     private func run(_ command: [String]) {
-        guard let arguments = adapterArguments else { return }
+        guard !isDemo, let arguments = adapterArguments else { return }
         let process = Process()
         process.executableURL = Self.perl
         process.arguments = arguments + command

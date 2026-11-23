@@ -20,12 +20,22 @@ final class MusicModule: PerchModule {
 
     @ObservationIgnored private var lingerTask: Task<Void, Never>?
     @ObservationIgnored private var artworkData: Data?
+    @ObservationIgnored private var demoObserver: NSObjectProtocol?
 
     var nowPlaying: NowPlaying? { service.nowPlaying }
 
     func start() {
         service.onChange = { [weak self] in self?.refresh() }
         service.start()
+        #if DEBUG
+        // Screenshots and demo GIFs without anyone's real music or artwork:
+        // post the distributed notification "app.perch.debug.demoMusic".
+        demoObserver = DistributedNotificationCenter.default().addObserver(
+            forName: Notification.Name("app.perch.debug.demoMusic"), object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.service.showDemo(DemoTrack.make()) }
+        }
+        #endif
     }
 
     func stop() {
@@ -110,3 +120,56 @@ final class MusicModule: PerchModule {
         return Color(hue: hue, saturation: min(saturation * 1.1, 0.75), brightness: max(brightness, 0.85))
     }
 }
+
+#if DEBUG
+/// A made-up track with generated artwork, for screenshots.
+private enum DemoTrack {
+    static func make() -> NowPlaying {
+        NowPlaying(
+            title: "Golden Hour",
+            artist: "The Notch Birds",
+            album: "Perch Sessions",
+            duration: 214,
+            elapsed: 71,
+            timestamp: .now,
+            rate: 1,
+            isPlaying: true,
+            bundleID: "com.apple.Music",
+            artwork: artwork()
+        )
+    }
+
+    /// Warm, soft colour fields, like a sunrise seen from a branch.
+    private static func artwork() -> Data? {
+        let size = 600
+        guard let bitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: size, pixelsHigh: size, bitsPerSample: 8,
+            samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
+            bytesPerRow: 0, bitsPerPixel: 0
+        ), let context = NSGraphicsContext(bitmapImageRep: bitmap) else { return nil }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        let rect = NSRect(x: 0, y: 0, width: size, height: size)
+        NSGradient(colors: [
+            NSColor(red: 0.16, green: 0.07, blue: 0.28, alpha: 1),
+            NSColor(red: 0.85, green: 0.30, blue: 0.36, alpha: 1),
+            NSColor(red: 1.00, green: 0.70, blue: 0.30, alpha: 1),
+        ])?.draw(in: rect, angle: 90)
+        let blobs: [(CGFloat, CGFloat, CGFloat, NSColor)] = [
+            (0.72, 0.30, 0.55, NSColor(red: 1.0, green: 0.85, blue: 0.45, alpha: 0.85)),
+            (0.20, 0.75, 0.50, NSColor(red: 0.55, green: 0.25, blue: 0.75, alpha: 0.7)),
+            (0.50, 0.55, 0.30, NSColor(red: 1.0, green: 0.55, blue: 0.40, alpha: 0.6)),
+        ]
+        for (x, y, r, color) in blobs {
+            let centre = NSPoint(x: CGFloat(size) * x, y: CGFloat(size) * y)
+            NSGradient(colors: [color, color.withAlphaComponent(0)])?
+                .draw(fromCenter: centre, radius: 0, toCenter: centre, radius: CGFloat(size) * r, options: [])
+        }
+        // A sun low on the horizon.
+        NSColor(red: 1.0, green: 0.93, blue: 0.75, alpha: 0.95).setFill()
+        NSBezierPath(ovalIn: NSRect(x: size / 2 - 70, y: 150, width: 140, height: 140)).fill()
+        NSGraphicsContext.restoreGraphicsState()
+        return bitmap.representation(using: .png, properties: [:])
+    }
+}
+#endif
