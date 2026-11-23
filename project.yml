@@ -23,6 +23,14 @@ targets:
     platform: macOS
     sources:
       - path: Perch
+      - path: Vendor/MediaRemoteAdapter/bin/mediaremote-adapter.pl
+        buildPhase: resources
+    dependencies:
+      # Loaded at runtime by /usr/bin/perl, which Apple entitles to use
+      # MediaRemote. Embedded, never linked into Perch itself.
+      - target: MediaRemoteAdapter
+        embed: true
+        link: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.perch.Perch
@@ -31,6 +39,28 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         ENABLE_APP_SANDBOX: NO
         CODE_SIGN_ENTITLEMENTS: Perch/Perch.entitlements
+  MediaRemoteAdapter:
+    # Vendored from github.com/ungive/mediaremote-adapter (BSD-3), built from source.
+    type: framework
+    platform: macOS
+    sources:
+      - path: Vendor/MediaRemoteAdapter/src
+      - path: Vendor/MediaRemoteAdapter/include
+        headerVisibility: public
+    settings:
+      base:
+        PRODUCT_NAME: MediaRemoteAdapter
+        PRODUCT_BUNDLE_IDENTIFIER: app.perch.MediaRemoteAdapter
+        GENERATE_INFOPLIST_FILE: YES
+        DEFINES_MODULE: NO
+        SKIP_INSTALL: YES
+        CLANG_ENABLE_OBJC_ARC: YES
+        GCC_SYMBOLS_PRIVATE_EXTERN: NO
+        OTHER_CFLAGS: "-fvisibility=default"
+        HEADER_SEARCH_PATHS: "$(SRCROOT)/Vendor/MediaRemoteAdapter/include $(SRCROOT)/Vendor/MediaRemoteAdapter/src"
+        USE_HEADERMAP: NO
+        OTHER_LDFLAGS: "-framework Foundation -framework AppKit -framework UniformTypeIdentifiers"
+        GCC_WARN_INHIBIT_ALL_WARNINGS: YES  # vendored code, kept byte-identical to upstream
   PerchTests:
     type: bundle.unit-test
     platform: macOS
