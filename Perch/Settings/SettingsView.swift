@@ -318,6 +318,8 @@ private struct AboutPane: View {
             .padding(.top, 14)
             .padding(.bottom, 6)
 
+            UpdatesSection()
+
             SectionLabel("Free software")
             Text("Perch is free software under the GNU General Public License v3. You may use, study, share and change it.")
                 .font(.system(size: 12))
@@ -329,6 +331,28 @@ private struct AboutPane: View {
             Credit("boring.notch", "TheBoredTeam, GPL-3. The motion Perch is tuned against.")
             Credit("DynamicNotchKit", "Kai Azim, MIT. The shape of the notch.", last: true)
         }
+    }
+}
+
+private struct UpdatesSection: View {
+    @Bindable private var updater = Updater.shared
+
+    var body: some View {
+        SectionLabel("Updates")
+        SettingRow("Check automatically", hint: lastCheckText) {
+            Toggle("", isOn: $updater.automaticallyChecks)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+        }
+        SettingRow("New version", hint: "Updates are signed; Perch installs only what its maker signed.", last: true) {
+            Button("Check now") { updater.checkNow() }
+                .controlSize(.small)
+        }
+    }
+
+    private var lastCheckText: String {
+        guard let date = updater.lastCheck else { return "Once a day, quietly. Not checked yet." }
+        return "Once a day, quietly. Last checked \(date.formatted(.relative(presentation: .named)))."
     }
 }
 

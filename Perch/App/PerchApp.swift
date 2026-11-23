@@ -31,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.host = host
         self.notch = notch
         SettingsWindowController.shared.host = host
+        _ = Updater.shared
         quitCleanlyOnSIGTERM()
     }
 

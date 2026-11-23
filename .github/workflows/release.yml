@@ -1,7 +1,8 @@
 name: Release
 
 # A tag like v0.2.0 builds Perch, signs it with the "Perch Code Signing"
-# certificate, packages a DMG and a zip, and publishes a GitHub release.
+# certificate, packages a DMG and a zip, signs the zip for Sparkle, writes the
+# appcast that installed copies read, and publishes a GitHub release.
 # Run it by hand (Actions > Release > Run workflow) for a dry run: it builds,
 # signs and uploads the files as an artifact, without publishing anything.
 
@@ -103,6 +104,36 @@ jobs:
           rm -rf dist/dmg
           (cd dist && shasum -a 256 Perch-* > SHA256SUMS.txt)
           cat dist/SHA256SUMS.txt
+
+      - name: Sign update and write appcast
+        env:
+          SPARKLE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          ZIP="dist/Perch-$VERSION.zip"
+          SIGNATURE=$(echo "$SPARKLE_KEY" | build/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/sign_update --ed-key-file - "$ZIP")
+          echo "$SIGNATURE" | grep -q 'sparkle:edSignature=' || { echo "signing failed"; exit 1; }
+          BASE="https://github.com/${GITHUB_REPOSITORY}/releases/download/v$VERSION"
+          cat > dist/appcast.xml <<APPCAST
+          <?xml version="1.0" encoding="utf-8"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+            <channel>
+              <title>Perch</title>
+              <item>
+                <title>Perch $VERSION</title>
+                <pubDate>$(LC_ALL=C date -u '+%a, %d %b %Y %H:%M:%S +0000')</pubDate>
+                <sparkle:version>$GITHUB_RUN_NUMBER</sparkle:version>
+                <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
+                <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+                <sparkle:releaseNotesLink>https://github.com/${GITHUB_REPOSITORY}/releases/tag/v$VERSION</sparkle:releaseNotesLink>
+                <enclosure url="$BASE/Perch-$VERSION.zip" $SIGNATURE type="application/octet-stream"/>
+              </item>
+            </channel>
+          </rss>
+          APPCAST
+          sed -i '' 's/^          //' dist/appcast.xml
+          xmllint --noout dist/appcast.xml
+          cat dist/appcast.xml
 
       - name: Upload files (dry run)
         if: github.event_name == 'workflow_dispatch'
