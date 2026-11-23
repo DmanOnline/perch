@@ -95,7 +95,7 @@ Gekozen op basis van de meest gevraagde boring.notch-issues (2026-11-23): notifi
 | Zonder Developer ID schrikt de installatie mensen af | Homebrew-cask als hoofdroute; Developer ID ($99/jr) overwegen bij 0.2 |
 | Te veel tegelijk willen | Per versie één thema; niets van 0.3 vóór 0.2 af is |
 
-## 8. Open keuzes voor Dion
+## 8. Open keuzes
 
 - [x] Naam van de app: Perch (2026-11-23)
 - [ ] Bundle-ID en domein (bv. perch.dev of getperch.app)

@@ -6,7 +6,7 @@ import Testing
 struct BluetoothReportTests {
     @Test func readsAirPodsBatteriesFromTheSystemReport() {
         let json = """
-        {"SPBluetoothDataType":[{"device_connected":[{"AirPods Pro van Dion":{
+        {"SPBluetoothDataType":[{"device_connected":[{"Sam's AirPods Pro":{
           "device_batteryLevelCase":"71%","device_batteryLevelLeft":"70%",
           "device_batteryLevelRight":"65%","device_minorType":"Headphones"}}]}]}
         """
@@ -101,11 +101,11 @@ struct AirPodsMomentTests {
 struct AccessoryPowerSourcesTests {
     /// What macOS reports with the right bud charging in a closed case.
     private let sources: [[String: Any]] = [
-        ["Name": "AirPods Pro van Dion-case", "Part Identifier": "Case", "Current Capacity": 71,
+        ["Name": "Sam's AirPods Pro-case", "Part Identifier": "Case", "Current Capacity": 71,
          "Is Charging": false, "Group Identifier": "G1", "Accessory Category": "Audio Battery Case"],
-        ["Name": "AirPods Pro van Dion", "Part Identifier": "Left", "Current Capacity": 65,
+        ["Name": "Sam's AirPods Pro", "Part Identifier": "Left", "Current Capacity": 65,
          "Is Charging": false, "Group Identifier": "G1", "Product ID": 8231, "Accessory Category": "Headset"],
-        ["Name": "AirPods Pro van Dion", "Part Identifier": "Right", "Current Capacity": 64,
+        ["Name": "Sam's AirPods Pro", "Part Identifier": "Right", "Current Capacity": 64,
          "Is Charging": true, "Group Identifier": "G1", "Product ID": 8231, "Accessory Category": "Headset"],
     ]
 
@@ -113,7 +113,7 @@ struct AccessoryPowerSourcesTests {
         let accessories = AccessoryPowerSources.parse(sources)
         #expect(accessories.count == 1)
         let pods = try #require(accessories.first)
-        #expect(pods.name == "AirPods Pro van Dion")
+        #expect(pods.name == "Sam's AirPods Pro")
         #expect(pods.kind == .airPodsPro)
         #expect(pods.left == 65 && pods.right == 64 && pods.caseLevel == 71)
         #expect(pods.rightCharging && !pods.leftCharging && !pods.caseCharging)
@@ -122,11 +122,11 @@ struct AccessoryPowerSourcesTests {
 
     @Test func combinedSourceIsSplitIntoBuds() throws {
         let combined: [[String: Any]] = [
-            ["Name": "AirPods Pro van Dion-case", "Part Identifier": "Case", "Current Capacity": 70, "Group Identifier": "G1"],
-            ["Name": "AirPods Pro van Dion", "Part Identifier": "Combined", "Current Capacity": 65, "Group Identifier": "G1",
+            ["Name": "Sam's AirPods Pro-case", "Part Identifier": "Case", "Current Capacity": 70, "Group Identifier": "G1"],
+            ["Name": "Sam's AirPods Pro", "Part Identifier": "Combined", "Current Capacity": 65, "Group Identifier": "G1",
              "Combined Parts": [
-                ["Name": "AirPods Pro van Dion", "Part Identifier": "Left", "Current Capacity": 65, "Group Identifier": "G1"],
-                ["Name": "AirPods Pro van Dion", "Part Identifier": "Right", "Current Capacity": 66, "Group Identifier": "G1"],
+                ["Name": "Sam's AirPods Pro", "Part Identifier": "Left", "Current Capacity": 65, "Group Identifier": "G1"],
+                ["Name": "Sam's AirPods Pro", "Part Identifier": "Right", "Current Capacity": 66, "Group Identifier": "G1"],
              ]],
         ]
         let pods = try #require(AccessoryPowerSources.parse(combined).first)
