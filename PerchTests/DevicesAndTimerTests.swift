@@ -73,6 +73,31 @@ private final class RestingStub: PerchModule {
     func expanded() -> AnyView { AnyView(EmptyView()) }
 }
 
+struct AirPodsMomentTests {
+    private let charging = AudioAccessory(name: "Pods", kind: .airPodsPro, left: 60, right: 60, caseLevel: 70,
+                                          leftCharging: true, rightCharging: true)
+
+    @Test func takingBudsOutOfTheCaseIsTheMoment() {
+        var out = charging
+        out.leftCharging = false
+        out.rightCharging = false
+        #expect(DevicesModule.arrival(from: [charging], to: [out])?.name == "Pods")
+    }
+
+    @Test func newlyConnectedAirPodsAreTheMoment() {
+        #expect(DevicesModule.arrival(from: [], to: [charging])?.name == "Pods")
+    }
+
+    @Test func batteryTicksAreNotAMoment() {
+        var tick = charging
+        tick.caseLevel = 69
+        #expect(DevicesModule.arrival(from: [charging], to: [tick]) == nil)
+        var putBack = charging
+        putBack.leftCharging = true
+        #expect(DevicesModule.arrival(from: [charging], to: [putBack]) == nil)
+    }
+}
+
 struct AccessoryPowerSourcesTests {
     /// What macOS reports with the right bud charging in a closed case.
     private let sources: [[String: Any]] = [

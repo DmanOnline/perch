@@ -26,6 +26,8 @@ final class DevicesModule: PerchModule {
     @ObservationIgnored private var clearTask: Task<Void, Never>?
     @ObservationIgnored private var debugObserver: NSObjectProtocol?
     @ObservationIgnored private var powerSource: CFRunLoopSource?
+    @ObservationIgnored private var hasBaseline = false
+    @ObservationIgnored private var lastAnnounced: (name: String, at: Date)?
 
     func start() {
         knownNames = BluetoothAudioWatcher.currentNames()
@@ -60,10 +62,28 @@ final class DevicesModule: PerchModule {
         let power = AccessoryPowerSources.read() ?? []
         let report = await BluetoothReport.read()
         let known = Set(power.map(\.name))
+        let previous = hasBaseline ? accessories : nil
         accessories = power + report.filter { !known.contains($0.name) }
+        hasBaseline = true
         if let current = arrived, let updated = accessories.first(where: { $0.name == current.name }) {
             arrived = updated
         }
+        if let previous, let accessory = Self.arrival(from: previous, to: accessories) {
+            announce(accessory)
+        }
+    }
+
+    /// The moment to show: AirPods that just appeared (connected), or whose
+    /// bud stopped charging (taken out of the case). AirPods usually stay
+    /// connected to the Mac while in the case, so the second is the common one.
+    nonisolated static func arrival(from previous: [AudioAccessory], to current: [AudioAccessory]) -> AudioAccessory? {
+        for accessory in current where accessory.hasBattery {
+            guard let before = previous.first(where: { $0.name == accessory.name }) else { return accessory }
+            let leftOut = before.leftCharging && !accessory.leftCharging && accessory.left != nil
+            let rightOut = before.rightCharging && !accessory.rightCharging && accessory.right != nil
+            if leftOut || rightOut { return accessory }
+        }
+        return nil
     }
 
     /// Batteries change, buds go in and out of the case: macOS posts each one
@@ -99,6 +119,9 @@ final class DevicesModule: PerchModule {
     }
 
     private func announce(_ accessory: AudioAccessory) {
+        // Connecting and taking buds out arrive as several changes; show one moment.
+        if let last = lastAnnounced, last.name == accessory.name, Date.now.timeIntervalSince(last.at) < 15 { return }
+        lastAnnounced = (accessory.name, .now)
         arrived = accessory
         Haptics.play(.event)
         clearTask?.cancel()
