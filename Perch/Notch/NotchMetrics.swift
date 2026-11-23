@@ -9,7 +9,7 @@ nonisolated enum NotchState: Equatable, Sendable {
 /// Sizes and motion of the notch. One place, so window, hit testing and
 /// drawing can never disagree.
 nonisolated enum NotchMetrics {
-    static let compactWingWidth: CGFloat = 72
+    static let compactWingWidth: CGFloat = 80
     static let expandedSize = CGSize(width: 580, height: 190)
     static let hoverPadding: CGFloat = 10
     /// Room under the body for the open-state shadow.

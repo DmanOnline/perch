@@ -7,6 +7,11 @@ nonisolated struct BatteryReading: Equatable, Sendable {
     var percent: Int
     var isCharging: Bool
     var isPluggedIn: Bool
+    /// macOS considers the battery full (its own flag, not a guess from the percentage).
+    var isCharged = false
+    /// Minutes until full while charging, until empty on battery; nil while
+    /// macOS is still estimating or when it does not apply.
+    var minutesRemaining: Int? = nil
 }
 
 /// Battery level and charging. Lights up the notch when power is connected
@@ -105,10 +110,14 @@ final class BatteryModule: PerchModule {
                   let current = description[kIOPSCurrentCapacityKey] as? Int,
                   let max = description[kIOPSMaxCapacityKey] as? Int, max > 0
             else { continue }
+            let charging = description[kIOPSIsChargingKey] as? Bool ?? false
+            let minutes = description[charging ? kIOPSTimeToFullChargeKey : kIOPSTimeToEmptyKey] as? Int
             return BatteryReading(
                 percent: Int((Double(current) / Double(max) * 100).rounded()),
-                isCharging: description[kIOPSIsChargingKey] as? Bool ?? false,
-                isPluggedIn: description[kIOPSPowerSourceStateKey] as? String == kIOPSACPowerValue
+                isCharging: charging,
+                isPluggedIn: description[kIOPSPowerSourceStateKey] as? String == kIOPSACPowerValue,
+                isCharged: description[kIOPSIsChargedKey] as? Bool ?? false,
+                minutesRemaining: minutes.flatMap { $0 > 0 ? $0 : nil }
             )
         }
         return nil
@@ -172,29 +181,87 @@ final class BatteryModule: PerchModule {
 
 private struct BatteryExpandedView: View {
     let module: BatteryModule
+    @State private var shownLevel = 0.0
 
     var body: some View {
         if let reading = module.reading {
-            HStack(spacing: 18) {
-                Image(systemName: BatteryModule.symbol(for: reading))
-                    .font(.system(size: 46, weight: .regular))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(BatteryModule.tint(for: reading))
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(reading.percent)%")
-                        .font(.system(size: 34, weight: .semibold, design: .rounded))
-                        .monospacedDigit()
-                        .contentTransition(.numericText())
-                    Text(reading.isCharging ? "Charging" : reading.isPluggedIn ? "Connected to power" : "On battery")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.secondary)
+            HStack(spacing: 26) {
+                BatteryGlyph(
+                    level: shownLevel,
+                    width: 118,
+                    fill: Self.fill(for: reading),
+                    showsBolt: reading.isPluggedIn,
+                    glow: Self.fill(for: reading) == .white ? 0.12 : 0.5
+                )
+                .animation(.spring(response: 0.6, dampingFraction: 0.8), value: shownLevel)
+                .animation(.spring(response: 0.35, dampingFraction: 0.7), value: reading.isPluggedIn)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(alignment: .firstTextBaseline, spacing: 1) {
+                        Text("\(reading.percent)")
+                            .font(.system(size: 46, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .contentTransition(.numericText(value: Double(reading.percent)))
+                        Text("%")
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.6))
+                    }
+                    Label(Self.status(for: reading), systemImage: Self.statusSymbol(for: reading))
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Self.fill(for: reading) == .white ? .white.opacity(0.85) : Self.fill(for: reading))
+                    if let time = Self.timeText(for: reading) {
+                        Text(time)
+                            .font(.system(size: 12.5, weight: .medium).monospacedDigit())
+                            .foregroundStyle(.white.opacity(0.5))
+                            .contentTransition(.opacity)
+                    } else if Self.isEstimating(reading) {
+                        // macOS needs a minute after a change in power to estimate.
+                        Text(reading.isCharging ? "Estimating time until full…" : "Estimating time left…")
+                            .font(.system(size: 12.5, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .phaseAnimator([1.0, 0.45]) { view, opacity in
+                                view.opacity(opacity)
+                            } animation: { _ in .easeInOut(duration: 0.9) }
+                    }
                 }
-                Spacer()
+                Spacer(minLength: 0)
             }
+            .padding(.leading, 12)
+            .onAppear { shownLevel = Double(reading.percent) / 100 }
+            .onChange(of: reading.percent) { _, percent in shownLevel = Double(percent) / 100 }
         } else {
             Text("No battery found")
                 .foregroundStyle(.secondary)
         }
+    }
+
+    static func fill(for reading: BatteryReading) -> Color {
+        if reading.isPluggedIn { return ChargingStyle.green }
+        if reading.percent <= BatteryModule.lowThreshold { return Color(red: 1, green: 0.27, blue: 0.23) }
+        return .white
+    }
+
+    static func status(for reading: BatteryReading) -> String {
+        if reading.isCharging { return "Charging" }
+        if reading.isPluggedIn { return reading.isCharged ? "Fully charged" : "Not charging" }
+        return reading.percent <= BatteryModule.lowThreshold ? "Low battery" : "On battery"
+    }
+
+    static func statusSymbol(for reading: BatteryReading) -> String {
+        if reading.isCharging { return "bolt.fill" }
+        if reading.isPluggedIn { return "powerplug.fill" }
+        return reading.percent <= BatteryModule.lowThreshold ? "exclamationmark.triangle.fill" : "laptopcomputer"
+    }
+
+    /// A time applies (charging, or on battery) but macOS has none yet.
+    static func isEstimating(_ reading: BatteryReading) -> Bool {
+        reading.minutesRemaining == nil && (reading.isCharging || !reading.isPluggedIn)
+    }
+
+    static func timeText(for reading: BatteryReading) -> String? {
+        guard let minutes = reading.minutesRemaining else { return nil }
+        let time = minutes >= 60 ? "\(minutes / 60) h \(minutes % 60) min" : "\(minutes) min"
+        return reading.isCharging ? "\(time) until full" : "\(time) left"
     }
 }
 

@@ -14,7 +14,7 @@ final class NotchWindowController {
     init(host: ModuleHost, screen: NSScreen) {
         model = NotchModel(host: host, geometry: screen.notchGeometry)
         panel = NotchPanel(contentRect: .zero)
-        let hosting = NSHostingView(rootView: NotchView(model: model))
+        let hosting = NotchHostingView(rootView: NotchView(model: model))
         hosting.sizingOptions = []
         panel.contentView = hosting
         model.onRequestOpen = { [weak self] in self?.open() }
@@ -107,4 +107,10 @@ final class NotchWindowController {
         model.selectedModuleID = nil
         panel.ignoresMouseEvents = true
     }
+}
+
+/// Takes the first click even while the panel is not key, so a button in the
+/// notch never needs a second click.
+private final class NotchHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }

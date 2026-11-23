@@ -88,44 +88,23 @@ struct NotchView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 0) {
             ForEach(model.host.enabledModules, id: \.id) { module in
-                Button {
-                    Haptics.play(.tap)
+                HeaderButton(symbol: module.symbol, size: 12,
+                             isSelected: model.expandedModule?.id == module.id, help: module.title) {
                     model.selectedModuleID = module.id
-                } label: {
-                    Image(systemName: module.symbol)
-                        .font(.system(size: 12, weight: .semibold))
-                        .frame(width: 26, height: 22)
-                        .background(
-                            Capsule().fill(model.expandedModule?.id == module.id ? Color.white.opacity(0.14) : .clear)
-                        )
                 }
-                .buttonStyle(.plain)
-                .help(module.title)
             }
             Spacer(minLength: model.geometry.notchSize.width)
-            Button {
+            HeaderButton(symbol: "gearshape.fill", size: 11, help: "Perch Settings") {
                 SettingsWindowController.shared.show()
-            } label: {
-                Image(systemName: "gearshape.fill")
-                    .font(.system(size: 11, weight: .semibold))
-                    .frame(width: 26, height: 22)
             }
-            .buttonStyle(.plain)
-            .help("Perch Settings")
-            Button {
+            HeaderButton(symbol: "power", size: 11, help: "Quit Perch") {
                 NSApp.terminate(nil)
-            } label: {
-                Image(systemName: "power")
-                    .font(.system(size: 11, weight: .semibold))
-                    .frame(width: 26, height: 22)
             }
-            .buttonStyle(.plain)
-            .help("Quit Perch")
         }
         .foregroundStyle(.white.opacity(0.85))
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 12)
     }
 }
 
@@ -149,5 +128,38 @@ private extension AnyTransition {
     /// In from under the notch, and back under it on the way out.
     static func tucked(under edge: HorizontalEdge) -> AnyTransition {
         .modifier(active: Tucked(edge: edge, isTucked: true), identity: Tucked(edge: edge, isTucked: false))
+    }
+}
+
+/// An icon button in the notch header. The capsule you see is small, but the
+/// whole padded square around it takes the click, and it lights up on hover
+/// so you can tell you are on it.
+private struct HeaderButton: View {
+    let symbol: String
+    let size: CGFloat
+    var isSelected = false
+    let help: String
+    let action: () -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        Button {
+            Haptics.play(.tap)
+            action()
+        } label: {
+            Image(systemName: symbol)
+                .font(.system(size: size, weight: .semibold))
+                .frame(width: 30, height: 24)
+                .background(
+                    Capsule().fill(.white.opacity(isSelected ? 0.14 : isHovered ? 0.08 : 0))
+                )
+                .padding(.horizontal, 3)
+                .padding(.vertical, 4)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+        .animation(.easeOut(duration: 0.15), value: isHovered)
+        .help(help)
     }
 }

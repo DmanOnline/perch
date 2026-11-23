@@ -48,10 +48,10 @@ struct ChargingTrailing: View {
     var body: some View {
         HStack(spacing: 5) {
             Text("\(percent)%")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 13.5, weight: .bold))
                 .monospacedDigit()
                 .foregroundStyle(ChargingStyle.green)
-            ChargingBattery(level: level, flash: flash)
+            BatteryGlyph(level: level, flash: flash)
         }
         .fixedSize()
         .frame(maxWidth: .infinity, alignment: .trailing)
@@ -71,10 +71,10 @@ struct ChargingTrailing: View {
         }
     }
 
-    static let trailingInset: CGFloat = 6
+    static let trailingInset: CGFloat = 4
     /// Distance from the wing's outer edge to the centre of the battery,
     /// where the energy pulses aim.
-    static let batteryCentreInset: CGFloat = trailingInset + 6.5
+    static let batteryCentreInset: CGFloat = trailingInset + 9
 }
 
 /// Pulses of light that run along the bottom edge of the notch, from the far
@@ -132,35 +132,62 @@ struct EnergyFlow: View {
     }
 }
 
-/// The battery glyph as iOS draws it in the island: a rounded body, a cap,
-/// a green fill and a bolt cut into it.
-private struct ChargingBattery: View {
+/// A chunky battery: a thick rim around a dark body, a bright fill with a
+/// shine along the top, and a big bolt with a dark edge so it reads on the
+/// fill and on grey alike. Scales with `width`, from the notch wing to the
+/// battery tab.
+struct BatteryGlyph: View {
     let level: Double
+    var width: CGFloat = 31
+    var fill: Color = ChargingStyle.green
+    var showsBolt = true
     var flash = false
+    /// Strength of the glow around the fill; colour reads best with more.
+    var glow = 0.45
 
     var body: some View {
-        HStack(spacing: 1.5) {
+        let height = width * 0.48
+        let rim = max(1.4, width * 0.045)
+        let inset = max(2.5, width * 0.075)
+        let corner = height * 0.34
+        HStack(spacing: max(1.5, width * 0.045)) {
             ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(.white.opacity(0.28))
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .fill(.white.opacity(0.12))
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .strokeBorder(.white.opacity(0.55), lineWidth: rim)
                 GeometryReader { proxy in
-                    RoundedRectangle(cornerRadius: 2.5, style: .continuous)
-                        .fill(ChargingStyle.green)
-                        .brightness(flash ? 0.35 : 0)
-                        .shadow(color: ChargingStyle.green.opacity(flash ? 0.9 : 0), radius: 4)
-                        .frame(width: proxy.size.width * level)
+                    RoundedRectangle(cornerRadius: corner - inset * 0.6, style: .continuous)
+                        .fill(LinearGradient(colors: [fill.mix(with: .white, by: 0.25), fill],
+                                             startPoint: .top, endPoint: .bottom))
+                        .overlay(alignment: .top) {
+                            // Shine: a thin highlight along the top of the fill.
+                            Capsule()
+                                .fill(.white.opacity(0.45))
+                                .frame(height: max(1.5, height * 0.09))
+                                .padding(.horizontal, inset * 0.8)
+                                .padding(.top, inset * 0.6)
+                        }
+                        .brightness(flash ? 0.3 : 0)
+                        .shadow(color: fill.opacity(flash ? 1 : glow), radius: flash ? width * 0.2 : width * 0.1)
+                        .frame(width: max(proxy.size.width * min(max(level, 0), 1), inset * 1.6))
                 }
-                .padding(1.5)
-                Image(systemName: "bolt.fill")
-                    .font(.system(size: 8, weight: .black))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
+                .padding(inset)
+                if showsBolt {
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: height * 0.7, weight: .black))
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.55), radius: max(0.6, width * 0.02))
+                        .shadow(color: .black.opacity(0.35), radius: max(1.5, width * 0.05))
+                        .frame(maxWidth: .infinity)
+                        .transition(.scale.combined(with: .opacity))
+                }
             }
-            .frame(width: 25, height: 12)
+            .frame(width: width, height: height)
             UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: 0,
-                                   bottomTrailingRadius: 1.5, topTrailingRadius: 1.5)
-                .fill(.white.opacity(0.28))
-                .frame(width: 1.5, height: 4.5)
+                                   bottomTrailingRadius: width * 0.065, topTrailingRadius: width * 0.065)
+                .fill(.white.opacity(0.55))
+                .frame(width: max(2.2, width * 0.07), height: height * 0.37)
         }
     }
 }
