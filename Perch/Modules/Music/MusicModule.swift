@@ -91,7 +91,7 @@ final class MusicModule: PerchModule {
     }
 
     func compactTrailing() -> AnyView {
-        AnyView(EqualizerView(isPlaying: nowPlaying?.isPlaying ?? false, color: accent).frame(width: 18, height: 14).frame(maxWidth: .infinity))
+        AnyView(EqualizerView(isPlaying: nowPlaying?.isPlaying ?? false, color: accent, live: Preferences.shared.musicVisualizer == .live).frame(width: 18, height: 14).frame(maxWidth: .infinity))
     }
 
     func expanded() -> AnyView {

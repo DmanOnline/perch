@@ -28,9 +28,11 @@ final class Preferences {
         static let hideInFullScreen = "hideInFullScreen"
         static let gestures = "gestures"
         static let notchStyle = "notchStyle"
+        static let showOnLockScreen = "showOnLockScreen"
         static let restingModule = "restingModule"
         static let disabledModules = "disabledModules"
         static let musicLinger = "music.linger"
+        static let musicVisualizer = "music.visualizer"
         static let batteryShowOnPlugIn = "battery.showOnPlugIn"
         static let batteryLowThreshold = "battery.lowThreshold"
     }
@@ -55,6 +57,8 @@ final class Preferences {
     var gestures: Bool { didSet { defaults.set(gestures, forKey: Key.gestures) } }
     /// Black like the hardware notch, or Liquid Glass when open.
     var notchStyle: NotchStyle { didSet { defaults.set(notchStyle.rawValue, forKey: Key.notchStyle) } }
+    /// Music, timer and batteries stay visible on the lock screen.
+    var showOnLockScreen: Bool { didSet { defaults.set(showOnLockScreen, forKey: Key.showOnLockScreen) } }
     /// Module kept visible next to the notch when nothing is happening; empty for none.
     var restingModule: String { didSet { defaults.set(restingModule, forKey: Key.restingModule) } }
     private(set) var disabledModules: Set<String> {
@@ -62,6 +66,8 @@ final class Preferences {
     }
     /// Seconds music keeps the notch after a pause; 0 lets go at once.
     var musicLinger: Double { didSet { defaults.set(musicLinger, forKey: Key.musicLinger) } }
+    /// Made-up dance, or bars that follow the real sound.
+    var musicVisualizer: MusicVisualizer { didSet { defaults.set(musicVisualizer.rawValue, forKey: Key.musicVisualizer) } }
     var batteryShowOnPlugIn: Bool { didSet { defaults.set(batteryShowOnPlugIn, forKey: Key.batteryShowOnPlugIn) } }
     var batteryLowThreshold: Int { didSet { defaults.set(batteryLowThreshold, forKey: Key.batteryLowThreshold) } }
 
@@ -78,10 +84,12 @@ final class Preferences {
         displayMode = defaults.string(forKey: Key.displayMode).flatMap(DisplayMode.init(rawValue:)) ?? .notchedScreens
         hideInFullScreen = defaults.object(forKey: Key.hideInFullScreen) as? Bool ?? true
         gestures = defaults.object(forKey: Key.gestures) as? Bool ?? true
+        showOnLockScreen = defaults.object(forKey: Key.showOnLockScreen) as? Bool ?? true
         notchStyle = defaults.string(forKey: Key.notchStyle).flatMap(NotchStyle.init(rawValue:)) ?? .black
         restingModule = defaults.string(forKey: Key.restingModule) ?? ""
         disabledModules = Set(defaults.stringArray(forKey: Key.disabledModules) ?? [])
         musicLinger = defaults.object(forKey: Key.musicLinger) as? Double ?? Default.musicLinger
+        musicVisualizer = defaults.string(forKey: Key.musicVisualizer).flatMap(MusicVisualizer.init(rawValue:)) ?? .animated
         batteryShowOnPlugIn = defaults.object(forKey: Key.batteryShowOnPlugIn) as? Bool ?? true
         batteryLowThreshold = defaults.object(forKey: Key.batteryLowThreshold) as? Int ?? Default.batteryLowThreshold
     }

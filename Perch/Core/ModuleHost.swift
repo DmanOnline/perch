@@ -15,8 +15,11 @@ final class ModuleHost {
         self.preferences = preferences
     }
 
+    /// The modules in use: switched on in the settings, and on the lock
+    /// screen only those that are safe to show there.
     var enabledModules: [any PerchModule] {
-        modules.filter { preferences.isEnabled($0.id) }
+        let locked = LockState.shared.isLocked
+        return modules.filter { preferences.isEnabled($0.id) && (!locked || LockState.allowedModules.contains($0.id)) }
     }
 
     /// What has the notch: the most important activity, or else the sneak peek
@@ -24,6 +27,11 @@ final class ModuleHost {
     var current: Activity? {
         if let active = Arbiter.select(enabledModules.compactMap(\.activity), now: .now) {
             return active
+        }
+        // Locked: what plays stays visible, as on an iPhone's lock screen.
+        if LockState.shared.isLocked, preferences.showOnLockScreen,
+           let music = module(id: "music")?.restingActivity {
+            return music
         }
         return module(id: preferences.restingModule)?.restingActivity
     }

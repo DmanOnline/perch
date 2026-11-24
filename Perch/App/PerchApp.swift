@@ -20,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // As the unit-test host, stay inert: no notch, no helper processes.
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
         let music = MusicModule()
+        LockState.shared.start()
         let mirror = MirrorModule()
         let privacy = PrivacyModule.shared
         privacy.mirror = mirror

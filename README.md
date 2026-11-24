@@ -143,6 +143,7 @@ Issues and pull requests are welcome. Perch aims to stay small, fast and native:
 - [boring.notch](https://github.com/TheBoredTeam/boring.notch) by TheBoredTeam, whose motion Perch is tuned against.
 - [DynamicNotchKit](https://github.com/MrKai77/DynamicNotchKit) by Kai Azim (MIT), for the shape of the notch.
 - [Sparkle](https://sparkle-project.org) (MIT), for updates.
+- [SkyLightWindow](https://github.com/Lakr233/SkyLightWindow) by Lakr233 (MIT), for how to stay above every desktop and the lock screen.
 
 ## License
 

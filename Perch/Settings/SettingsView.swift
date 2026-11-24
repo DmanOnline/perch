@@ -185,6 +185,9 @@ private struct GeneralPane: View {
             }
 
             SectionLabel("At rest")
+            SettingRow("On the lock screen", hint: "Music, timer and batteries stay visible while the Mac is locked. Files, camera and settings never do.") {
+                Toggle("", isOn: $preferences.showOnLockScreen)
+            }
             SettingRow("Sneak peek", hint: restingHint, last: true) {
                 ChipPicker(selection: $preferences.restingModule, options: [
                     ("", "Off"),
@@ -348,7 +351,8 @@ private struct AboutPane: View {
             Credit("mediaremote-adapter", "Jonas van den Berg, BSD 3-Clause. Reads what is playing.")
             Credit("boring.notch", "TheBoredTeam, GPL-3. The motion Perch is tuned against.")
             Credit("DynamicNotchKit", "Kai Azim, MIT. The shape of the notch.")
-            Credit("Sparkle", "The Sparkle Project, MIT. Updates.", last: true)
+            Credit("Sparkle", "The Sparkle Project, MIT. Updates.")
+            Credit("SkyLightWindow", "Lakr233, MIT. How to stay above every desktop and the lock screen.", last: true)
         }
     }
 }

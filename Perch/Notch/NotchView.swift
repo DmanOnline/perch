@@ -74,6 +74,7 @@ struct NotchView: View {
 
     /// Files dropped anywhere on the notch go on the Shelf.
     private func receive(_ providers: [NSItemProvider]) {
+        guard !LockState.shared.isLocked else { return }
         for provider in providers {
             _ = provider.loadObject(ofClass: URL.self) { url, _ in
                 guard let url, url.isFileURL else { return }
@@ -122,12 +123,15 @@ struct NotchView: View {
                 }
             }
             Spacer(minLength: model.geometry.notchSize.width)
-            CaffeineButton()
-            HeaderButton(symbol: "gearshape.fill", size: 11, help: "Perch Settings") {
-                SettingsWindowController.shared.show()
-            }
-            HeaderButton(symbol: "power", size: 11, help: "Quit Perch") {
-                NSApp.terminate(nil)
+            // Nothing that changes the Mac or opens a window while it is locked.
+            if !LockState.shared.isLocked {
+                CaffeineButton()
+                HeaderButton(symbol: "gearshape.fill", size: 11, help: "Perch Settings") {
+                    SettingsWindowController.shared.show()
+                }
+                HeaderButton(symbol: "power", size: 11, help: "Quit Perch") {
+                    NSApp.terminate(nil)
+                }
             }
         }
         .foregroundStyle(.white.opacity(0.85))

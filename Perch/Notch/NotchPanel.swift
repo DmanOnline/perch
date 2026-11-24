@@ -19,6 +19,9 @@ final class NotchPanel: NSPanel {
         isMovable = false
         isReleasedWhenClosed = false
         hidesOnDeactivate = false
+        // Allowed on the lock screen, where Perch shows music, timer and
+        // batteries (and nothing private; see LockState).
+        canBecomeVisibleWithoutLogin = true
         ignoresMouseEvents = true
     }
 

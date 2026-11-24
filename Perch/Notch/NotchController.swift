@@ -60,8 +60,9 @@ final class NotchController {
         watching = next
         // Volume and brightness still come through, as they do over a video on iPhone.
         let showsLevel = host.current?.moduleID == "hud"
+        let lockedAway = LockState.shared.isLocked && !preferences.showOnLockScreen
         for (id, window) in windows {
-            window.setHidden(next[id] != nil && !showsLevel)
+            window.setHidden((next[id] != nil && !showsLevel) || lockedAway)
         }
     }
 
@@ -70,6 +71,8 @@ final class NotchController {
             _ = preferences.hideInFullScreen
             _ = mediaSource()
             _ = host.current?.moduleID
+            _ = LockState.shared.isLocked
+            _ = preferences.showOnLockScreen
         } onChange: { [weak self] in
             Task { @MainActor in
                 self?.applyFullScreen()

@@ -26,18 +26,26 @@ struct ArtworkView: View {
     }
 }
 
-/// Four bars that dance while playing and rest low while paused.
+/// Four bars that dance while playing and rest low while paused. In live
+/// mode they follow the real sound instead (see `LiveAudio`), and fall back
+/// to the dance when there is nothing to hear, for instance when macOS was
+/// not allowed to share the system audio.
 ///
 /// Drawn with Core Animation so the render server runs the loop; a SwiftUI
 /// timeline here kept Perch at about 12% CPU the whole time music played.
 struct EqualizerView: NSViewRepresentable {
     let isPlaying: Bool
     let color: Color
+    var live = false
 
     func makeNSView(context: Context) -> EqualizerBarsView { EqualizerBarsView() }
 
     func updateNSView(_ view: EqualizerBarsView, context: Context) {
-        view.update(isPlaying: isPlaying, color: NSColor(color).cgColor)
+        view.update(isPlaying: isPlaying, live: live, color: NSColor(color).cgColor)
+    }
+
+    static func dismantleNSView(_ view: EqualizerBarsView, coordinator: ()) {
+        view.stopListening()
     }
 }
 
@@ -54,9 +62,17 @@ final class EqualizerBarsView: NSView {
         [0.5, 1.0, 0.3, 0.85, 0.6, 0.95, 0.4],
         [0.9, 0.45, 0.7, 0.3, 1.0],
     ]
+    /// Without sound for this long, live mode dances instead of lying flat.
+    private static let silenceBeforeDance: TimeInterval = 3
+
+    private enum Motion { case rest, dance, live }
 
     private var bars: [CALayer] = []
-    private var isPlaying: Bool?
+    private var motion: Motion?
+    private var wantsLive = false
+    private var isPlaying = false
+    private var listening = false
+    private var link: CADisplayLink?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -90,14 +106,71 @@ final class EqualizerBarsView: NSView {
         CATransaction.commit()
     }
 
-    func update(isPlaying: Bool, color: CGColor) {
+    func update(isPlaying: Bool, live: Bool, color: CGColor) {
         for bar in bars { bar.backgroundColor = color }
-        guard isPlaying != self.isPlaying else { return }
         self.isPlaying = isPlaying
+        wantsLive = live
+        if isPlaying && live && window != nil { startListening() } else { stopListening() }
+        if !isPlaying {
+            apply(.rest)
+        } else if !live {
+            apply(.dance)
+        } else if motion == nil || motion == .rest {
+            // Live levels take over on the next frame; until there is sound,
+            // the bars dance.
+            apply(.dance)
+        }
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil { stopListening() } else if isPlaying && wantsLive { startListening() }
+    }
+
+    private func startListening() {
+        guard !listening else { return }
+        listening = true
+        LiveAudio.shared.acquire()
+        let link = displayLink(target: self, selector: #selector(frame(_:)))
+        link.add(to: .main, forMode: .common)
+        self.link = link
+    }
+
+    func stopListening() {
+        link?.invalidate()
+        link = nil
+        guard listening else { return }
+        listening = false
+        LiveAudio.shared.release()
+    }
+
+    @objc private func frame(_ link: CADisplayLink) {
+        let audio = LiveAudio.shared
+        let quietFor = audio.lastSignal.map { -$0.timeIntervalSinceNow } ?? .infinity
+        guard !audio.failed, quietFor < Self.silenceBeforeDance else {
+            apply(.dance)
+            return
+        }
+        apply(.live)
+        let levels = audio.levels
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for (index, bar) in bars.enumerated() {
+            let level = CGFloat(levels[min(index, levels.count - 1)])
+            bar.transform = CATransform3DMakeScale(1, Self.restScale + (1 - Self.restScale) * level, 1)
+        }
+        CATransaction.commit()
+    }
+
+    private func apply(_ next: Motion) {
+        guard next != motion else { return }
+        let previous = motion
+        motion = next
         for (index, bar) in bars.enumerated() {
             let current = bar.presentation()?.transform ?? bar.transform
             bar.removeAllAnimations()
-            if isPlaying {
+            switch next {
+            case .dance:
                 let values = Self.patterns[index]
                 let dance = CAKeyframeAnimation(keyPath: "transform.scale.y")
                 dance.values = values + [values[0]]
@@ -106,13 +179,20 @@ final class EqualizerBarsView: NSView {
                 dance.repeatCount = .infinity
                 dance.isRemovedOnCompletion = false
                 bar.add(dance, forKey: "dance")
-            } else {
+            case .rest:
+                guard previous != nil else { continue }
                 bar.transform = CATransform3DMakeScale(1, Self.restScale, 1)
                 let settle = CABasicAnimation(keyPath: "transform")
                 settle.fromValue = current
                 settle.duration = 0.25
                 settle.timingFunction = CAMediaTimingFunction(name: .easeOut)
                 bar.add(settle, forKey: "settle")
+            case .live:
+                // Start from where the dance was, so the hand-over is seamless.
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                bar.transform = current
+                CATransaction.commit()
             }
         }
     }
@@ -263,6 +343,14 @@ struct MusicSettingsView: View {
     @Bindable private var preferences = Preferences.shared
 
     var body: some View {
+        SettingRow("Equalizer", hint: preferences.musicVisualizer == .live
+                   ? "Moves with what you hear. macOS asks once to let Perch read system audio; it only measures, nothing is recorded."
+                   : "A gentle dance while music plays. No permission needed.") {
+            ChipPicker(selection: $preferences.musicVisualizer, options: [
+                (.animated, "Animated"),
+                (.live, "Live"),
+            ])
+        }
         SettingRow("Stay after pause", hint: preferences.musicLinger == 0
                    ? "The notch lets go as soon as you pause."
                    : "Keeps the notch this long after you pause.", last: true) {
