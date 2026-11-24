@@ -50,6 +50,12 @@ Perch is signed but not notarized by Apple, so macOS says it "could not verify" 
 2. Next to "Perch was blocked", click **Open Anyway** and confirm with your password or Touch ID.
 3. Click **Open Anyway** once more in the dialog that follows.
 
+Comfortable with Terminal? This does the same in one line, before you open Perch:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Perch.app
+```
+
 You do this once. After that Perch opens normally, and updates itself from then on. Installed with Homebrew? The same goes for you the first time.
 
 You need a Mac on macOS 15 Sequoia or later. Macs without a notch get a virtual one at the top of the screen.
