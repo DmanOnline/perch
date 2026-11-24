@@ -1,0 +1,26 @@
+name: Idea for the notch
+description: Something you want Perch to show or do.
+labels: [idea]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [roadmap](https://github.com/DmanOnline/perch#roadmap) and the open ideas first: if yours is there, a thumbs-up on it counts as a vote, and the most wanted ideas move up.
+  - type: textarea
+    id: moment
+    attributes:
+      label: The moment
+      description: When should it appear, and what should it show? Think of it as an iPhone Dynamic Island moment.
+      placeholder: When my build finishes, the notch slides out with a green check and the build time.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why you want it
+      description: What you do today instead, and what bothers you about that.
+  - type: textarea
+    id: elsewhere
+    attributes:
+      label: Seen it elsewhere?
+      description: Another app or the iPhone that does this well, with a link or screenshot.

@@ -168,7 +168,7 @@ Want something sooner, or something that is not here? [Open an issue](https://gi
 
 ## Contributing
 
-Issues and pull requests are welcome. Perch aims to stay small, fast and native: one clear idea per pull request, tests for logic, and a screenshot or GIF for anything you can see. Run the tests with `xcodebuild test -scheme Perch` after `xcodegen generate`.
+Issues, ideas and pull requests are welcome. Perch aims to stay small, fast and native: one clear idea per pull request, tests for logic, and a screenshot or GIF for anything you can see. See [CONTRIBUTING.md](CONTRIBUTING.md) for building, the code layout and what makes a good pull request, or say hello in [Discussions](https://github.com/DmanOnline/perch/discussions).
 
 ## Thanks
 
