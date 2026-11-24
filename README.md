@@ -25,13 +25,15 @@ The notch on your MacBook is a hole in the screen. Perch turns it into a living 
 
 ## Install
 
-**With Homebrew**
+**With Homebrew (recommended)**
 
 ```bash
 brew tap dmanonline/perch
 brew trust dmanonline/perch
 brew install --cask perch
 ```
+
+Homebrew checks the download against its checksum, and `brew upgrade` keeps Perch current alongside your other apps.
 
 **Or with the DMG**
 
