@@ -23,6 +23,35 @@ The notch on your MacBook is a hole in the screen. Perch turns it into a living 
   <img src="docs/images/charging.gif" alt="Plugging in: 'Charging' slides out of the notch, pulses of energy run into the battery, then the notch folds back to the music that was playing" width="640">
 </p>
 
+## Install
+
+**With Homebrew**
+
+```bash
+brew tap dmanonline/perch
+brew trust dmanonline/perch
+brew install --cask perch
+```
+
+**Or with the DMG**
+
+1. Download `Perch-x.y.z.dmg` from the [latest release](https://github.com/DmanOnline/perch/releases/latest) and open it.
+2. In the window that appears, drag **Perch** onto the **Applications** folder next to it.
+3. Eject the Perch disk in Finder's sidebar; you can delete the DMG.
+4. Open Perch from Applications. A welcome screen opens under the notch; from then on Perch lives in the notch, not in the Dock.
+
+**The first time you open it**
+
+Perch is signed but not notarized by Apple, so macOS says it "could not verify" Perch and only offers **Done**. Click Done, then:
+
+1. Open **System Settings › Privacy & Security** and scroll down to the **Security** section.
+2. Next to "Perch was blocked", click **Open Anyway** and confirm with your password or Touch ID.
+3. Click **Open Anyway** once more in the dialog that follows.
+
+You do this once. After that Perch opens normally, and updates itself from then on. Installed with Homebrew? The same goes for you the first time.
+
+You need a Mac on macOS 15 Sequoia or later. Macs without a notch get a virtual one at the top of the screen.
+
 ## What it does
 
 **Lives in the notch.** When nothing is happening, Perch is invisible. When something is, it slides out of the notch on both sides, and slides back under it when it is over. Rest the pointer on it or click it to open the full view.
@@ -86,23 +115,7 @@ The notch on your MacBook is a hole in the screen. Perch turns it into a living 
 | Telemetry | none |
 | Permissions | none required. Optional: Accessibility to replace the volume and brightness pop-up, Camera for the mirror, system audio for the live equalizer (measured, never recorded) |
 
-## Install
-
-**With Homebrew**
-
-```bash
-brew tap dmanonline/perch
-brew trust dmanonline/perch
-brew install --cask perch
-```
-
-**Or download** `Perch.dmg` from the [latest release](https://github.com/DmanOnline/perch/releases/latest) and drag Perch to Applications.
-
-Perch is signed but not notarized by Apple, so the first time macOS may refuse to open it. Open **System Settings › Privacy & Security** and click **Open Anyway** next to Perch. After that it opens normally and keeps itself up to date.
-
-You need a Mac on macOS 15 Sequoia or later. Macs without a notch get a virtual one at the top of the screen.
-
-**Build it yourself**
+## Build it yourself
 
 ```bash
 brew install xcodegen
