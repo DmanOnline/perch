@@ -203,7 +203,14 @@ private struct BatteryExpandedView: View {
     private var accessory: AudioAccessory? {
         guard let devices = module.devices, Preferences.shared.isEnabled(devices.id) else { return nil }
         return devices.arrived.flatMap { arrived in devices.accessories.first { $0.name == arrived.name } ?? arrived }
+            ?? devices.accessories.first(where: { $0.hasBattery && $0.kind.isAudio })
             ?? devices.accessories.first(where: \.hasBattery)
+    }
+
+    /// Mouse, keyboard and trackpad beside the headphones, as small chips.
+    private var peripherals: [AudioAccessory] {
+        guard let devices = module.devices, Preferences.shared.isEnabled(devices.id) else { return [] }
+        return devices.accessories.filter { !$0.kind.isAudio && $0.hasBattery && $0.name != accessory?.name }
     }
 
     var body: some View {
@@ -252,8 +259,17 @@ private struct BatteryExpandedView: View {
                     Rectangle()
                         .fill(.white.opacity(0.1))
                         .frame(width: 1, height: 96)
-                    AccessoryBatteries(accessory: accessory)
-                        .transition(.opacity.combined(with: .move(edge: .trailing)))
+                    VStack(alignment: .leading, spacing: 10) {
+                        AccessoryBatteries(accessory: accessory)
+                        if !peripherals.isEmpty {
+                            HStack(spacing: 10) {
+                                ForEach(peripherals) { device in
+                                    PeripheralChip(device: device)
+                                }
+                            }
+                        }
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .trailing)))
                 }
             }
             .padding(.leading, 12)
@@ -328,5 +344,27 @@ private struct BatterySettingsView: View {
         }
         .toggleStyle(.switch)
         .controlSize(.small)
+    }
+}
+
+/// A peripheral in one line: its symbol and level, red when low.
+private struct PeripheralChip: View {
+    let device: AudioAccessory
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Image(systemName: device.kind.symbol)
+                .font(.system(size: 11, weight: .semibold))
+            Text(device.headline.map { "\($0)%" } ?? "–")
+                .font(.system(size: 11.5, weight: .bold).monospacedDigit())
+            if device.singleCharging {
+                Image(systemName: "bolt.fill").font(.system(size: 9, weight: .black))
+            }
+        }
+        .foregroundStyle(DeviceStyle.color(for: device.headline ?? 100))
+        .padding(.horizontal, 8)
+        .frame(height: 22)
+        .background(Capsule().fill(.white.opacity(0.08)))
+        .help(device.name)
     }
 }

@@ -23,6 +23,7 @@ nonisolated struct AudioAccessory: Equatable, Identifiable, Sendable {
 
     enum Kind: String, Sendable {
         case airPodsPro, airPodsMax, airPods, beats, headphones, speaker
+        case mouse, keyboard, trackpad, gamepad
 
         var symbol: String {
             switch self {
@@ -32,11 +33,28 @@ nonisolated struct AudioAccessory: Equatable, Identifiable, Sendable {
             case .beats: "beats.headphones"
             case .headphones: "headphones"
             case .speaker: "hifispeaker.fill"
+            case .mouse: "magicmouse.fill"
+            case .keyboard: "keyboard.fill"
+            case .trackpad: "rectangle.and.hand.point.up.left.fill"
+            case .gamepad: "gamecontroller.fill"
+            }
+        }
+
+        /// Headphones and speakers: these get the connect moment.
+        var isAudio: Bool {
+            switch self {
+            case .mouse, .keyboard, .trackpad, .gamepad: false
+            default: true
             }
         }
 
         static func guess(name: String, minorType: String?) -> Kind {
             let lower = name.lowercased()
+            let category = minorType?.lowercased() ?? ""
+            if lower.contains("trackpad") || category.contains("trackpad") { return .trackpad }
+            if lower.contains("mouse") || category.contains("mouse") { return .mouse }
+            if lower.contains("keyboard") || category.contains("keyboard") { return .keyboard }
+            if lower.contains("controller") || category.contains("gamepad") || category.contains("game") { return .gamepad }
             if lower.contains("airpods max") { return .airPodsMax }
             if lower.contains("airpods pro") { return .airPodsPro }
             if lower.contains("airpods") { return .airPods }

@@ -8,7 +8,7 @@ import SwiftUI
 /// and shows them beside the system pop-up.
 @Observable
 final class HUDModule: PerchModule {
-    enum Kind: Equatable { case volume, brightness }
+    enum Kind: Equatable { case volume, brightness, keyboard }
 
     static let display: Duration = .milliseconds(1600)
     /// One key press, as macOS does it: sixteen steps from silent to full.
@@ -17,7 +17,7 @@ final class HUDModule: PerchModule {
     static let fineStep: Float = 1.0 / 64
 
     let id = "hud"
-    let title = "Volume & Brightness"
+    let title = "Volume, Brightness & Keyboard Light"
     let symbol = "speaker.wave.2.fill"
     let summary = "Volume and brightness slide out of the notch instead of the grey pop-up."
     /// No tab: the sliders appear when you hover over the pop-up.
@@ -28,6 +28,9 @@ final class HUDModule: PerchModule {
     private(set) var volume: Float = SystemVolume.volume ?? 0.5
     private(set) var isMuted = SystemVolume.isMuted
     private(set) var brightness: Float = SystemBrightness.brightness ?? 0.5
+    private(set) var keyboardLight: Float = SystemKeyboardBacklight.brightness ?? 0
+    /// Level to come back to when the light is toggled back on.
+    @ObservationIgnored private var keyboardLightBeforeOff: Float = 0.5
     private(set) var catchesKeys = false
 
     @ObservationIgnored private let tap = MediaKeyTap()
@@ -44,6 +47,7 @@ final class HUDModule: PerchModule {
         volume = SystemVolume.volume ?? volume
         isMuted = SystemVolume.isMuted
         brightness = SystemBrightness.brightness ?? brightness
+        keyboardLight = SystemKeyboardBacklight.brightness ?? keyboardLight
         lastOwnChange = .now + 1
         watcher.start { [weak self] in self?.volumeChangedOutside() }
         startCatchingKeys()
@@ -89,6 +93,15 @@ final class HUDModule: PerchModule {
         case .mute: setMuted(!isMuted)
         case .brightnessUp: setBrightness(brightness + step)
         case .brightnessDown: setBrightness(brightness - step)
+        case .keyboardLightUp: setKeyboardLight(keyboardLight + step)
+        case .keyboardLightDown: setKeyboardLight(keyboardLight - step)
+        case .keyboardLightToggle:
+            if keyboardLight > 0 {
+                keyboardLightBeforeOff = keyboardLight
+                setKeyboardLight(0)
+            } else {
+                setKeyboardLight(keyboardLightBeforeOff)
+            }
         }
     }
 
@@ -113,6 +126,13 @@ final class HUDModule: PerchModule {
         SystemBrightness.setBrightness(level)
         brightness = level
         show(.brightness)
+    }
+
+    func setKeyboardLight(_ value: Float) {
+        let level = (min(max(value, 0), 1) / Self.fineStep).rounded() * Self.fineStep
+        SystemKeyboardBacklight.setBrightness(level)
+        keyboardLight = level
+        show(.keyboard)
     }
 
     private func volumeChangedOutside() {
@@ -155,11 +175,16 @@ final class HUDModule: PerchModule {
         switch kind {
         case .volume: isMuted || volume == 0 ? "speaker.slash.fill" : "speaker.wave.3.fill"
         case .brightness: "sun.max.fill"
+        case .keyboard: keyboardLight == 0 ? "light.min" : "light.max"
         }
     }
 
     var level: Float {
-        kind == .volume ? (isMuted ? 0 : volume) : brightness
+        switch kind {
+        case .volume: isMuted ? 0 : volume
+        case .brightness: brightness
+        case .keyboard: keyboardLight
+        }
     }
 
     func compactLeading() -> AnyView {
@@ -224,7 +249,7 @@ private struct HUDExpandedView: View {
     let module: HUDModule
 
     var body: some View {
-        VStack(spacing: 22) {
+        VStack(spacing: 16) {
             row(symbol: module.isMuted ? "speaker.slash.fill" : "speaker.wave.3.fill",
                 value: Binding(get: { Double(module.isMuted ? 0 : module.volume) },
                                set: { module.setVolume(Float($0)) })) {
@@ -233,6 +258,11 @@ private struct HUDExpandedView: View {
             if SystemBrightness.brightness != nil {
                 row(symbol: "sun.max.fill",
                     value: Binding(get: { Double(module.brightness) }, set: { module.setBrightness(Float($0)) }),
+                    tap: nil)
+            }
+            if SystemKeyboardBacklight.brightness != nil {
+                row(symbol: "light.max",
+                    value: Binding(get: { Double(module.keyboardLight) }, set: { module.setKeyboardLight(Float($0)) }),
                     tap: nil)
             }
         }

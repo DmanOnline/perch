@@ -5,6 +5,7 @@ import ApplicationServices
 /// Needs Accessibility permission; without it Perch only watches the volume.
 nonisolated enum MediaKey: Sendable {
     case volumeUp, volumeDown, mute, brightnessUp, brightnessDown
+    case keyboardLightUp, keyboardLightDown, keyboardLightToggle
 
     /// NX_KEYTYPE_* codes carried in system-defined events.
     init?(code: Int) {
@@ -14,6 +15,9 @@ nonisolated enum MediaKey: Sendable {
         case 7: self = .mute
         case 2: self = .brightnessUp
         case 3: self = .brightnessDown
+        case 21: self = .keyboardLightUp
+        case 22: self = .keyboardLightDown
+        case 23: self = .keyboardLightToggle
         default: return nil
         }
     }

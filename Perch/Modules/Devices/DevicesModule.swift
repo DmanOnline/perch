@@ -27,6 +27,7 @@ final class DevicesModule: PerchModule {
     @ObservationIgnored private var debugObserver: NSObjectProtocol?
     @ObservationIgnored private var powerSource: CFRunLoopSource?
     @ObservationIgnored private var hasBaseline = false
+    @ObservationIgnored private var warnedLow: Set<String> = []
     @ObservationIgnored private var lastAnnounced: (name: String, at: Date)?
 
     func start() {
@@ -70,14 +71,35 @@ final class DevicesModule: PerchModule {
         }
         if let previous, let accessory = Self.arrival(from: previous, to: accessories) {
             announce(accessory)
+        } else if let low = Self.newlyLow(in: accessories, alreadyWarned: &warnedLow) {
+            announce(low)
         }
     }
 
     /// The moment to show: AirPods that just appeared (connected), or whose
     /// bud stopped charging (taken out of the case). AirPods usually stay
     /// connected to the Mac while in the case, so the second is the common one.
+    /// Mouse, keyboard or trackpad at or below this lights up the notch.
+    nonisolated static let lowLevel = 15
+
+    /// A peripheral that just ran low, once per drop: it warns again only
+    /// after it has been charged above 20%.
+    nonisolated static func newlyLow(in accessories: [AudioAccessory], alreadyWarned: inout Set<String>) -> AudioAccessory? {
+        var result: AudioAccessory?
+        for accessory in accessories where !accessory.kind.isAudio {
+            guard let level = accessory.headline else { continue }
+            if level > 20 || accessory.singleCharging {
+                alreadyWarned.remove(accessory.name)
+            } else if level <= lowLevel, !alreadyWarned.contains(accessory.name), result == nil {
+                alreadyWarned.insert(accessory.name)
+                result = accessory
+            }
+        }
+        return result
+    }
+
     nonisolated static func arrival(from previous: [AudioAccessory], to current: [AudioAccessory]) -> AudioAccessory? {
-        for accessory in current where accessory.hasBattery {
+        for accessory in current where accessory.hasBattery && accessory.kind.isAudio {
             guard let before = previous.first(where: { $0.name == accessory.name }) else { return accessory }
             let leftOut = before.leftCharging && !accessory.leftCharging && accessory.left != nil
             let rightOut = before.rightCharging && !accessory.rightCharging && accessory.right != nil

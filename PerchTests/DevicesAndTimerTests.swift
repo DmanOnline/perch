@@ -149,6 +149,8 @@ struct MediaKeyTests {
         #expect(MediaKey.decode(subtype: 8, data1: (3 << 16) | 0x0B00)?.key == .brightnessDown)
         #expect(MediaKey.decode(subtype: 8, data1: (3 << 16) | 0x0B00)?.isDown == false)
         #expect(MediaKey.decode(subtype: 8, data1: (7 << 16) | 0x0A00)?.key == .mute)
+        #expect(MediaKey.decode(subtype: 8, data1: (21 << 16) | 0x0A00)?.key == .keyboardLightUp)
+        #expect(MediaKey.decode(subtype: 8, data1: (23 << 16) | 0x0A00)?.key == .keyboardLightToggle)
     }
 
     @Test func otherKeysPassThrough() {
@@ -183,5 +185,30 @@ struct SwipeTrackerTests {
         var tracker = SwipeTracker()
         #expect(tracker.add(dx: 5, dy: 10) == nil)
         #expect(tracker.add(dx: -3, dy: 8) == nil)
+    }
+}
+
+struct PeripheralTests {
+    @Test func peripheralsAreRecognisedByName() {
+        #expect(AudioAccessory.Kind.guess(name: "Magic Mouse", minorType: nil) == .mouse)
+        #expect(AudioAccessory.Kind.guess(name: "Magic Keyboard with Touch ID", minorType: nil) == .keyboard)
+        #expect(AudioAccessory.Kind.guess(name: "Magic Trackpad", minorType: nil) == .trackpad)
+        #expect(AudioAccessory.Kind.guess(name: "AirPods Pro", minorType: "Headset") == .airPodsPro)
+        #expect(!AudioAccessory.Kind.mouse.isAudio && AudioAccessory.Kind.airPods.isAudio)
+    }
+
+    @Test func lowBatteryWarnsOncePerDrop() {
+        var warned: Set<String> = []
+        let low = AudioAccessory(name: "Magic Mouse", kind: .mouse, single: 12)
+        #expect(DevicesModule.newlyLow(in: [low], alreadyWarned: &warned)?.name == "Magic Mouse")
+        #expect(DevicesModule.newlyLow(in: [low], alreadyWarned: &warned) == nil)
+        let charged = AudioAccessory(name: "Magic Mouse", kind: .mouse, single: 60)
+        _ = DevicesModule.newlyLow(in: [charged], alreadyWarned: &warned)
+        #expect(DevicesModule.newlyLow(in: [low], alreadyWarned: &warned)?.name == "Magic Mouse")
+    }
+
+    @Test func peripheralsDoNotGetTheAirPodsMoment() {
+        let mouse = AudioAccessory(name: "Magic Mouse", kind: .mouse, single: 80)
+        #expect(DevicesModule.arrival(from: [], to: [mouse]) == nil)
     }
 }

@@ -146,3 +146,35 @@ nonisolated enum SystemBrightness {
         _ = setter(display, min(max(value, 0), 1))
     }
 }
+
+/// The keyboard backlight, through CoreBrightness's KeyboardBrightnessClient
+/// (what Control Center uses). Private, so looked up at runtime; nil when the
+/// Mac has no backlit keyboard or the class is gone.
+nonisolated enum SystemKeyboardBacklight {
+    private typealias Get = @convention(c) (AnyObject, Selector, UInt64) -> Float
+    private typealias Set = @convention(c) (AnyObject, Selector, Float, UInt64) -> Bool
+
+    nonisolated(unsafe) private static let client: NSObject? = {
+        _ = dlopen("/System/Library/PrivateFrameworks/CoreBrightness.framework/CoreBrightness", RTLD_LAZY)
+        return (NSClassFromString("KeyboardBrightnessClient") as? NSObject.Type)?.init()
+    }()
+
+    private static var keyboard: UInt64? {
+        guard let client, client.responds(to: NSSelectorFromString("copyKeyboardBacklightIDs")),
+              let ids = client.perform(NSSelectorFromString("copyKeyboardBacklightIDs"))?.takeRetainedValue() as? [NSNumber]
+        else { return nil }
+        return ids.first?.uint64Value
+    }
+
+    static var brightness: Float? {
+        let selector = NSSelectorFromString("brightnessForKeyboard:")
+        guard let client, let keyboard, client.responds(to: selector), let imp = client.method(for: selector) else { return nil }
+        return unsafeBitCast(imp, to: Get.self)(client, selector, keyboard)
+    }
+
+    static func setBrightness(_ value: Float) {
+        let selector = NSSelectorFromString("setBrightness:forKeyboard:")
+        guard let client, let keyboard, client.responds(to: selector), let imp = client.method(for: selector) else { return }
+        _ = unsafeBitCast(imp, to: Set.self)(client, selector, min(max(value, 0), 1), keyboard)
+    }
+}

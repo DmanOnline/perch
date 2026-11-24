@@ -20,10 +20,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // As the unit-test host, stay inert: no notch, no helper processes.
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
         let music = MusicModule()
+        let mirror = MirrorModule()
+        let privacy = PrivacyModule.shared
+        privacy.mirror = mirror
         let devices = DevicesModule()
         let battery = BatteryModule()
         battery.devices = devices
-        let host = ModuleHost(modules: [music, TimerModule(), ShelfModule(), MirrorModule(), devices, battery, HUDModule()])
+        let host = ModuleHost(modules: [music, TimerModule(), ShelfModule(), mirror, devices, battery, HUDModule(), privacy])
         host.start()
         // The app whose media is playing, if any: its full-screen window is a film.
         let notch = NotchController(host: host) { music.nowPlaying.flatMap { $0.isPlaying ? $0.bundleID : nil } }
