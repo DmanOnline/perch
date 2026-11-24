@@ -72,10 +72,15 @@ App (SwiftUI + AppKit, macOS 15+)
 
 | Versie | Thema | Inhoud | Klaar als |
 |---|---|---|---|
-| **0.1** | Fundament | NotchWindow op alle schermen, hover open/dicht, slaap/wake-bestendig; Music-module (nu speelt, bediening, artwork); instellingen; CI-build; Homebrew-cask | Een week dagelijks gebruik zonder dat de notch verdwijnt |
-| **0.2** | Dynamic Island-gevoel | AirPods en Bluetooth (verbinden met batterij per oortje), timer in de vleugels, permanent zichtbare sneak peek (#797); niet-genotariseerde release met eigen Homebrew-tap | Eerste publieke release met README en demo-GIF |
-| **0.3** | Pariteit | HUD-vervanging, batterij en Bluetooth, agenda, bestandsplank met AirDrop | Alles wat boring.notch kan, minimaal even goed |
-| **0.4** | Platform | Externe extensies (losse bundels), notificaties spiegelen (#592, meest gevraagd), Liquid Glass-stijl (#922) | Eerste extensie van iemand anders |
+| **0.1** | Fundament | NotchWindow op alle schermen, hover open/dicht, slaap/wake-bestendig; Music-module; instellingen; CI | Gedaan |
+| **0.2** | Dynamic Island-momenten | AirPods, timer, HUD, plank, Caffeine, sneak peek; getekende release, Sparkle, Homebrew-tap | Gedaan |
+| **0.3** | Handen erop | Trackpad-gebaren, spiegel, Liquid Glass | Gedaan |
+| **0.4** | Altijd erbij | Vergrendelscherm, live equalizer (process tap + FFT, opt-in), camera/mic-moment, batterij muis/toetsenbord, toetsenbordverlichting | Uitgebracht |
+| **0.5** | Perch aan het werk | Coding agents (Claude Code: status + Toestaan/Weigeren via PermissionRequest-hook; later Codex/Cursor); agenda-moment 2 min voor een afspraak met Join en spiegel; eigen live activities via Shortcuts (App Intents) en een `perch`-CLI | Een Claude Code-toestemming beantwoord vanuit de notch |
+| **0.6** | Perch voor plezier | Gesynchroniseerde songteksten (LRCLIB), teleprompter onder de camera, downloads en AirDrop met voortgang, klembordgeschiedenis | Songtekst loopt gelijk met Spotify en Apple Music |
+| **1.0** | Volwassen | Notificaties in de notch, externe extensies, instelbare grootte, notarisatie met Developer ID | Eerste extensie van iemand anders |
+
+Na 0.4 bepaalt de belangstelling de volgorde: launch-posts en duimpjes op issues wegen mee.
 
 Gekozen op basis van de meest gevraagde boring.notch-issues (2026-11-23): notificaties (#592, 13 duimen), altijd zichtbare sneak peek (#797), Liquid Glass (#922), Claude Code-monitoring (#951).
 
