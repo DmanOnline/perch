@@ -21,8 +21,21 @@ final class WelcomeWindowController {
         let window = self.window ?? makeWindow()
         self.window = window
         NSApp.activate()
-        window.center()
+        window.layoutIfNeeded()
+        placeUnderNotch(window)
         window.makeKeyAndOrderFront(nil)
+    }
+
+    /// Centred on the notch, hanging just below the menu bar, as if it came
+    /// out of the notch. The screen with a notch first; else the main screen.
+    private func placeUnderNotch(_ window: NSWindow) {
+        guard let screen = NSScreen.screens.first(where: { $0.safeAreaInsets.top > 0 }) ?? NSScreen.main else {
+            window.center()
+            return
+        }
+        let size = window.frame.size
+        window.setFrameOrigin(NSPoint(x: screen.frame.midX - size.width / 2,
+                                      y: max(screen.visibleFrame.minY, screen.visibleFrame.maxY - size.height - 8)))
     }
 
     func close() {
@@ -54,10 +67,11 @@ final class WelcomeWindowController {
 
 struct WelcomeView: View {
     static let width: CGFloat = 480
-    static let height: CGFloat = 540
+    static let height: CGFloat = 660
 
     let host: ModuleHost?
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @Bindable private var preferences = Preferences.shared
 
     private var hud: HUDModule? { host?.module(id: "hud") as? HUDModule }
 
@@ -82,9 +96,11 @@ struct WelcomeView: View {
 
             VStack(alignment: .leading, spacing: 18) {
                 point("cursorarrow.motionlines", "Rest the pointer on the notch, or click it",
-                      "It opens with music, a timer, your batteries and the shelf.")
+                      "It opens with music, a timer, your batteries, the shelf and a mirror.")
+                point("hand.draw", "Swipe over it with two fingers",
+                      "Down opens, up closes, sideways skips a song or switches tabs.")
                 point("sparkles", "Things come out by themselves",
-                      "Music, charging, AirPods, a finished timer, volume and brightness.")
+                      "Music, charging, AirPods, a finished timer, volume, a camera turning on. Also on the lock screen.")
                 point("tray.and.arrow.down", "Drag files onto the notch",
                       "They wait on the shelf until you drag them out or AirDrop them.")
             }
@@ -99,7 +115,7 @@ struct WelcomeView: View {
                             if enabled { try? SMAppService.mainApp.register() } else { try? SMAppService.mainApp.unregister() }
                         }
                 }
-                SettingRow("Volume and brightness", hint: "Let Perch replace the grey pop-up. Needs Accessibility permission.", last: true) {
+                SettingRow("Volume and brightness", hint: "Let Perch replace the grey pop-up. Needs Accessibility permission.") {
                     if hud?.catchesKeys == true {
                         Label("On", systemImage: "checkmark.circle.fill")
                             .font(.system(size: 12, weight: .semibold))
@@ -108,6 +124,14 @@ struct WelcomeView: View {
                         Button("Allow…") { hud?.requestKeyAccess() }
                             .controlSize(.small)
                     }
+                }
+                SettingRow("Equalizer", hint: preferences.musicVisualizer == .live
+                           ? "Moves with what you hear. macOS asks once to share system audio; nothing is recorded."
+                           : "Dances while music plays. Live follows the real sound.", last: true) {
+                    ChipPicker(selection: $preferences.musicVisualizer, options: [
+                        (.animated, "Animated"),
+                        (.live, "Live"),
+                    ])
                 }
             }
             .padding(.horizontal, 36)

@@ -80,7 +80,7 @@ The notch on your MacBook is a hole in the screen. Perch turns it into a living 
 | Memory | about 20 MB |
 | Dependencies | Sparkle for updates; one vendored BSD-3 helper, built from source |
 | Telemetry | none |
-| Permissions | none required; Accessibility only if you want Perch to replace the volume and brightness pop-up |
+| Permissions | none required. Optional: Accessibility to replace the volume and brightness pop-up, Camera for the mirror, system audio for the live equalizer (measured, never recorded) |
 
 ## Install
 

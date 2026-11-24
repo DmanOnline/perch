@@ -6,9 +6,9 @@ import Synchronization
 
 /// How the bars next to the notch move while music plays.
 nonisolated enum MusicVisualizer: String, CaseIterable, Sendable {
-    /// A made-up dance, no permission needed.
+    /// A made-up dance, no permission needed. The default; also what live mode falls back to.
     case animated
-    /// The real loudness of the sound the Mac plays, per frequency band.
+    /// The real loudness of the sound the Mac plays, per frequency band. Opt-in: macOS shows its recording indicator while it listens.
     case live
 }
 
@@ -76,6 +76,10 @@ nonisolated final class TapEngine: @unchecked Sendable {
         var lastSignal: Date?
     }
 
+    /// Start of the private aggregate device's UID, so Perch can tell its
+    /// own tap apart from a real microphone.
+    static let devicePrefix = "com.itcompleet.perch.equalizer."
+
     private let shared = Mutex(Shared())
     private var tapID = AudioObjectID(kAudioObjectUnknown)
     private var deviceID = AudioObjectID(kAudioObjectUnknown)
@@ -114,7 +118,7 @@ nonisolated final class TapEngine: @unchecked Sendable {
 
         var aggregate: [String: Any] = [
             "name": "Perch equalizer",
-            "uid": "com.itcompleet.perch.equalizer.\(UUID().uuidString)",
+            "uid": Self.devicePrefix + UUID().uuidString,
             "private": true,
             "stacked": false,
             "tapautostart": true,

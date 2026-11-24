@@ -102,6 +102,9 @@ final class PrivacyModule: PerchModule {
         var devices = [AudioDeviceID](repeating: 0, count: Int(size) / MemoryLayout<AudioDeviceID>.size)
         guard AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &devices) == noErr else { return false }
         return devices.contains { device in
+            // Perch's own equalizer tap shows up as an input device here; it
+            // listens to what the Mac plays, not to a microphone.
+            if deviceUID(device)?.hasPrefix(TapEngine.devicePrefix) == true { return false }
             var streams = AudioObjectPropertyAddress(
                 mSelector: kAudioDevicePropertyStreams,
                 mScope: kAudioObjectPropertyScopeInput,
@@ -116,6 +119,17 @@ final class PrivacyModule: PerchModule {
             var valueSize = UInt32(MemoryLayout<UInt32>.size)
             return AudioObjectGetPropertyData(device, &running, 0, nil, &valueSize, &value) == noErr && value != 0
         }
+    }
+
+    nonisolated private static func deviceUID(_ device: AudioDeviceID) -> String? {
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyDeviceUID,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain)
+        var uid: Unmanaged<CFString>?
+        var size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
+        guard AudioObjectGetPropertyData(device, &address, 0, nil, &size, &uid) == noErr else { return nil }
+        return uid?.takeRetainedValue() as String?
     }
 
     // MARK: Views
