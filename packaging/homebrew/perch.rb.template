@@ -26,13 +26,19 @@ cask "perch" do
     "~/Library/Application Support/com.itcompleet.perch",
     "~/Library/Caches/com.itcompleet.perch",
     "~/Library/HTTPStorages/com.itcompleet.perch",
+    "~/Library/HTTPStorages/com.itcompleet.perch.binarycookies",
+    "~/Library/WebKit/com.itcompleet.perch",
     "~/Library/Preferences/com.itcompleet.perch.plist",
   ]
 
   caveats <<~EOS
-    Perch is signed but not notarized by Apple. The first time, macOS may
-    refuse to open it: open System Settings > Privacy & Security and click
-    "Open Anyway" next to Perch. After that it opens normally and updates
-    itself.
+    Perch is signed but not notarized by Apple, so the first time macOS
+    says it could not verify Perch. Skip that warning with:
+
+      xattr -dr com.apple.quarantine /Applications/Perch.app
+
+    Or open Perch, click Done, then System Settings > Privacy & Security >
+    "Open Anyway". Either way it is once; after that Perch opens normally
+    and updates itself.
   EOS
 end

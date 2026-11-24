@@ -31,9 +31,10 @@ The notch on your MacBook is a hole in the screen. Perch turns it into a living 
 brew tap dmanonline/perch
 brew trust dmanonline/perch
 brew install --cask perch
+xattr -dr com.apple.quarantine /Applications/Perch.app
 ```
 
-Homebrew checks the download against its checksum, and `brew upgrade` keeps Perch current alongside your other apps.
+The last line is optional: it lets Perch open the first time without macOS's warning (see below). Homebrew checks the download against its checksum, and `brew upgrade` keeps Perch current alongside your other apps.
 
 **Or with the DMG**
 
